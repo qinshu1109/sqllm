@@ -55,8 +55,18 @@ type Group struct {
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 
-	AccountGroups []AccountGroup `json:"account_groups,omitempty"`
-	AccountCount  int64          `json:"account_count,omitempty"`
+	AccountGroups []AccountGroup   `json:"account_groups,omitempty"`
+	AccountCount  int64            `json:"account_count,omitempty"`
+	ModelRates    []GroupModelRate `json:"model_rates,omitempty"`
+}
+
+type GroupModelRate struct {
+	ID             int64     `json:"id"`
+	GroupID        int64     `json:"group_id"`
+	Model          string    `json:"model"`
+	RateMultiplier float64   `json:"rate_multiplier"`
+	CreatedAt      time.Time `json:"created_at"`
+	UpdatedAt      time.Time `json:"updated_at"`
 }
 
 type Account struct {

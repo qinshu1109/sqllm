@@ -62,6 +62,8 @@ type UsageLog struct {
 	ActualCost float64 `json:"actual_cost,omitempty"`
 	// RateMultiplier holds the value of the "rate_multiplier" field.
 	RateMultiplier float64 `json:"rate_multiplier,omitempty"`
+	// RateSource holds the value of the "rate_source" field.
+	RateSource string `json:"rate_source,omitempty"`
 	// BillingType holds the value of the "billing_type" field.
 	BillingType int8 `json:"billing_type,omitempty"`
 	// Stream holds the value of the "stream" field.
@@ -165,7 +167,7 @@ func (*UsageLog) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullFloat64)
 		case usagelog.FieldID, usagelog.FieldUserID, usagelog.FieldAPIKeyID, usagelog.FieldAccountID, usagelog.FieldGroupID, usagelog.FieldSubscriptionID, usagelog.FieldInputTokens, usagelog.FieldOutputTokens, usagelog.FieldCacheCreationTokens, usagelog.FieldCacheReadTokens, usagelog.FieldCacheCreation5mTokens, usagelog.FieldCacheCreation1hTokens, usagelog.FieldBillingType, usagelog.FieldDurationMs, usagelog.FieldFirstTokenMs, usagelog.FieldImageCount:
 			values[i] = new(sql.NullInt64)
-		case usagelog.FieldRequestID, usagelog.FieldModel, usagelog.FieldImageSize:
+		case usagelog.FieldRequestID, usagelog.FieldModel, usagelog.FieldRateSource, usagelog.FieldImageSize:
 			values[i] = new(sql.NullString)
 		case usagelog.FieldCreatedAt:
 			values[i] = new(sql.NullTime)
@@ -311,6 +313,12 @@ func (_m *UsageLog) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field rate_multiplier", values[i])
 			} else if value.Valid {
 				_m.RateMultiplier = value.Float64
+			}
+		case usagelog.FieldRateSource:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field rate_source", values[i])
+			} else if value.Valid {
+				_m.RateSource = value.String
 			}
 		case usagelog.FieldBillingType:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
@@ -481,6 +489,9 @@ func (_m *UsageLog) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("rate_multiplier=")
 	builder.WriteString(fmt.Sprintf("%v", _m.RateMultiplier))
+	builder.WriteString(", ")
+	builder.WriteString("rate_source=")
+	builder.WriteString(_m.RateSource)
 	builder.WriteString(", ")
 	builder.WriteString("billing_type=")
 	builder.WriteString(fmt.Sprintf("%v", _m.BillingType))

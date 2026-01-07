@@ -16,6 +16,7 @@ var (
 type GroupRepository interface {
 	Create(ctx context.Context, group *Group) error
 	GetByID(ctx context.Context, id int64) (*Group, error)
+	GetByIDWithModelRates(ctx context.Context, id int64) (*Group, error)
 	Update(ctx context.Context, group *Group) error
 	Delete(ctx context.Context, id int64) error
 	DeleteCascade(ctx context.Context, id int64) ([]int64, error)
@@ -28,6 +29,11 @@ type GroupRepository interface {
 	ExistsByName(ctx context.Context, name string) (bool, error)
 	GetAccountCount(ctx context.Context, groupID int64) (int64, error)
 	DeleteAccountGroupsByGroupID(ctx context.Context, groupID int64) (int64, error)
+
+	// Model rates methods
+	GetModelRates(ctx context.Context, groupID int64) ([]GroupModelRate, error)
+	SetModelRates(ctx context.Context, groupID int64, rates []GroupModelRate) error
+	GetModelRateForModel(ctx context.Context, groupID int64, model string) (multiplier float64, source string, found bool)
 }
 
 // CreateGroupRequest 创建分组请求

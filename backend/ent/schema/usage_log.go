@@ -84,6 +84,9 @@ func (UsageLog) Fields() []ent.Field {
 		field.Float("rate_multiplier").
 			Default(1).
 			SchemaType(map[string]string{dialect.Postgres: "decimal(10,4)"}),
+		field.String("rate_source").
+			MaxLen(20).
+			Default("group"), // 'group' or 'model'
 
 		// 其他字段
 		field.Int8("billing_type").

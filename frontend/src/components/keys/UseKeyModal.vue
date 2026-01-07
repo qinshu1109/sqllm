@@ -327,7 +327,7 @@ const comment = (value: string) => wrapToken('text-slate-500', value)
 // Syntax highlighting helpers
 // Generate file configs based on platform and active tab
 const currentFiles = computed((): FileConfig[] => {
-  const baseUrl = props.baseUrl || window.location.origin
+  const baseUrl = (props.baseUrl && props.baseUrl.trim()) ? props.baseUrl.trim() : window.location.origin
   const apiKey = props.apiKey
 
   switch (props.platform) {
@@ -354,17 +354,17 @@ function generateAnthropicFiles(baseUrl: string, apiKey: string): FileConfig[] {
     case 'unix':
       path = 'Terminal'
       content = `export ANTHROPIC_BASE_URL="${baseUrl}"
-export ANTHROPIC_AUTH_TOKEN="${apiKey}"`
+export ANTHROPIC_API_KEY="${apiKey}"`
       break
     case 'cmd':
       path = 'Command Prompt'
       content = `set ANTHROPIC_BASE_URL=${baseUrl}
-set ANTHROPIC_AUTH_TOKEN=${apiKey}`
+set ANTHROPIC_API_KEY=${apiKey}`
       break
     case 'powershell':
       path = 'PowerShell'
       content = `$env:ANTHROPIC_BASE_URL="${baseUrl}"
-$env:ANTHROPIC_AUTH_TOKEN="${apiKey}"`
+$env:ANTHROPIC_API_KEY="${apiKey}"`
       break
     default:
       path = 'Terminal'

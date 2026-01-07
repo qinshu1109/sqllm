@@ -152,6 +152,21 @@ export async function getGroupApiKeys(
   return data
 }
 
+/**
+ * Get available models for a group
+ * Models are aggregated from the model_mapping of all accounts linked to the group
+ * @param groupId - Optional group ID (if not provided, returns all models filtered by platform)
+ * @param platform - Optional platform filter
+ * @returns List of available model IDs
+ */
+export async function getAvailableModels(groupId?: number, platform?: string): Promise<string[]> {
+  const url = groupId ? `/admin/groups/${groupId}/models` : '/admin/groups/models'
+  const { data } = await apiClient.get<string[]>(url, {
+    params: platform ? { platform } : undefined
+  })
+  return data
+}
+
 export const groupsAPI = {
   list,
   getAll,
@@ -162,7 +177,8 @@ export const groupsAPI = {
   delete: deleteGroup,
   toggleStatus,
   getStats,
-  getGroupApiKeys
+  getGroupApiKeys,
+  getAvailableModels
 }
 
 export default groupsAPI

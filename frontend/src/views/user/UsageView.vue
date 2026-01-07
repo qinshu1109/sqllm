@@ -101,6 +101,17 @@
               />
             </div>
 
+            <!-- Model Filter -->
+            <div class="min-w-[200px]">
+              <label class="input-label">{{ t('usage.model') }}</label>
+              <Select
+                v-model="filters.model"
+                :options="modelOptions"
+                :placeholder="t('usage.allModels')"
+                @change="applyFilters"
+              />
+            </div>
+
             <!-- Date Range Filter -->
             <div>
               <label class="input-label">{{ t('usage.timeRange') }}</label>
@@ -449,7 +460,7 @@ import EmptyState from '@/components/common/EmptyState.vue'
 import Select from '@/components/common/Select.vue'
 import DateRangePicker from '@/components/common/DateRangePicker.vue'
 import Icon from '@/components/icons/Icon.vue'
-import type { UsageLog, ApiKey, UsageQueryParams, UsageStatsResponse } from '@/types'
+import type { UsageLog, ApiKey, UsageQueryParams, UsageStatsResponse, ModelStat } from '@/types'
 import type { Column } from '@/components/common/types'
 import { formatDateTime } from '@/utils/format'
 
@@ -485,6 +496,7 @@ const columns = computed<Column[]>(() => [
 
 const usageLogs = ref<UsageLog[]>([])
 const apiKeys = ref<ApiKey[]>([])
+const models = ref<ModelStat[]>([])
 const loading = ref(false)
 const exporting = ref(false)
 
@@ -494,6 +506,16 @@ const apiKeyOptions = computed(() => {
     ...apiKeys.value.map((key) => ({
       value: key.id,
       label: key.name
+    }))
+  ]
+})
+
+const modelOptions = computed(() => {
+  return [
+    { value: null, label: t('usage.allModels') },
+    ...models.value.map((m) => ({
+      value: m.model,
+      label: m.model
     }))
   ]
 })
@@ -514,6 +536,7 @@ const endDate = ref(formatLocalDate(now))
 
 const filters = ref<UsageQueryParams>({
   api_key_id: undefined,
+  model: undefined,
   start_date: undefined,
   end_date: undefined
 })
@@ -613,6 +636,15 @@ const loadApiKeys = async () => {
   }
 }
 
+const loadModels = async () => {
+  try {
+    const response = await usageAPI.getDashboardModels()
+    models.value = response.models || []
+  } catch (error) {
+    console.error('Failed to load models:', error)
+  }
+}
+
 const loadUsageStats = async () => {
   try {
     const apiKeyId = filters.value.api_key_id ? Number(filters.value.api_key_id) : undefined
@@ -636,6 +668,7 @@ const applyFilters = () => {
 const resetFilters = () => {
   filters.value = {
     api_key_id: undefined,
+    model: undefined,
     start_date: undefined,
     end_date: undefined
   }
@@ -806,6 +839,7 @@ const hideTokenTooltip = () => {
 
 onMounted(() => {
   loadApiKeys()
+  loadModels()
   loadUsageLogs()
   loadUsageStats()
 })

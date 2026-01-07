@@ -2,6 +2,16 @@ package service
 
 import "time"
 
+// GroupModelRate represents per-model rate configuration within a group
+type GroupModelRate struct {
+	ID             int64
+	GroupID        int64
+	Model          string
+	RateMultiplier float64
+	CreatedAt      time.Time
+	UpdatedAt      time.Time
+}
+
 type Group struct {
 	ID             int64
 	Name           string
@@ -27,6 +37,9 @@ type Group struct {
 
 	AccountGroups []AccountGroup
 	AccountCount  int64
+
+	// 模型专属费率配置
+	ModelRates []GroupModelRate
 }
 
 func (g *Group) IsActive() bool {
@@ -67,4 +80,18 @@ func (g *Group) GetImagePrice(imageSize string) *float64 {
 		// 未知尺寸默认按 2K 计费
 		return g.ImagePrice2K
 	}
+}
+
+// GetRateMultiplierForModel 获取指定模型的费率倍数
+// 如果设置了模型专属费率则返回它，否则返回分组通用费率
+// 返回值: (multiplier, source) - source 为 "model" 或 "group"
+func (g *Group) GetRateMultiplierForModel(model string) (float64, string) {
+	// 精确匹配模型专属费率
+	for _, mr := range g.ModelRates {
+		if mr.Model == model {
+			return mr.RateMultiplier, "model"
+		}
+	}
+	// fallback 到分组通用费率
+	return g.RateMultiplier, "group"
 }

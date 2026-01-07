@@ -2162,10 +2162,25 @@ func (s *GatewayService) RecordUsage(ctx context.Context, input *RecordUsageInpu
 	account := input.Account
 	subscription := input.Subscription
 
-	// 获取费率倍数
+	// 获取费率倍数和来源
 	multiplier := s.cfg.Default.RateMultiplier
+	rateSource := "group"
 	if apiKey.GroupID != nil && apiKey.Group != nil {
-		multiplier = apiKey.Group.RateMultiplier
+		// 优先检查模型专属费率
+		if len(apiKey.Group.ModelRates) > 0 {
+			// 如果 Group 已经预加载了 ModelRates，直接使用
+			multiplier, rateSource = apiKey.Group.GetRateMultiplierForModel(result.Model)
+		} else {
+			// 否则查询数据库
+			if modelRate, source, found := s.groupRepo.GetModelRateForModel(ctx, *apiKey.GroupID, result.Model); found {
+				multiplier = modelRate
+				rateSource = source
+			} else {
+				// fallback 到分组通用费率
+				multiplier = apiKey.Group.RateMultiplier
+				rateSource = "group"
+			}
+		}
 	}
 
 	var cost *CostBreakdown
@@ -2228,6 +2243,7 @@ func (s *GatewayService) RecordUsage(ctx context.Context, input *RecordUsageInpu
 		TotalCost:           cost.TotalCost,
 		ActualCost:          cost.ActualCost,
 		RateMultiplier:      multiplier,
+		RateSource:          rateSource,
 		BillingType:         billingType,
 		Stream:              result.Stream,
 		DurationMs:          &durationMs,

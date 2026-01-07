@@ -22,6 +22,12 @@ func NewGroupHandler(adminService service.AdminService) *GroupHandler {
 	}
 }
 
+// ModelRateRequest represents a single model rate configuration
+type ModelRateRequest struct {
+	Model          string  `json:"model" binding:"required"`
+	RateMultiplier float64 `json:"rate_multiplier"`
+}
+
 // CreateGroupRequest represents create group request
 type CreateGroupRequest struct {
 	Name             string   `json:"name" binding:"required"`
@@ -37,6 +43,8 @@ type CreateGroupRequest struct {
 	ImagePrice1K *float64 `json:"image_price_1k"`
 	ImagePrice2K *float64 `json:"image_price_2k"`
 	ImagePrice4K *float64 `json:"image_price_4k"`
+	// 模型费率配置
+	ModelRates []ModelRateRequest `json:"model_rates"`
 }
 
 // UpdateGroupRequest represents update group request
@@ -55,6 +63,8 @@ type UpdateGroupRequest struct {
 	ImagePrice1K *float64 `json:"image_price_1k"`
 	ImagePrice2K *float64 `json:"image_price_2k"`
 	ImagePrice4K *float64 `json:"image_price_4k"`
+	// 模型费率配置（nil 表示不更新，空数组表示清除所有）
+	ModelRates *[]ModelRateRequest `json:"model_rates"`
 }
 
 // List handles listing all groups with pagination
@@ -137,6 +147,15 @@ func (h *GroupHandler) Create(c *gin.Context) {
 		return
 	}
 
+	// 转换 ModelRates
+	var modelRates []service.GroupModelRateInput
+	for _, mr := range req.ModelRates {
+		modelRates = append(modelRates, service.GroupModelRateInput{
+			Model:          mr.Model,
+			RateMultiplier: mr.RateMultiplier,
+		})
+	}
+
 	group, err := h.adminService.CreateGroup(c.Request.Context(), &service.CreateGroupInput{
 		Name:             req.Name,
 		Description:      req.Description,
@@ -150,6 +169,7 @@ func (h *GroupHandler) Create(c *gin.Context) {
 		ImagePrice1K:     req.ImagePrice1K,
 		ImagePrice2K:     req.ImagePrice2K,
 		ImagePrice4K:     req.ImagePrice4K,
+		ModelRates:       modelRates,
 	})
 	if err != nil {
 		response.ErrorFrom(c, err)
@@ -174,6 +194,19 @@ func (h *GroupHandler) Update(c *gin.Context) {
 		return
 	}
 
+	// 转换 ModelRates（nil 表示不更新，空数组表示清除所有）
+	var modelRates *[]service.GroupModelRateInput
+	if req.ModelRates != nil {
+		rates := make([]service.GroupModelRateInput, 0, len(*req.ModelRates))
+		for _, mr := range *req.ModelRates {
+			rates = append(rates, service.GroupModelRateInput{
+				Model:          mr.Model,
+				RateMultiplier: mr.RateMultiplier,
+			})
+		}
+		modelRates = &rates
+	}
+
 	group, err := h.adminService.UpdateGroup(c.Request.Context(), groupID, &service.UpdateGroupInput{
 		Name:             req.Name,
 		Description:      req.Description,
@@ -188,6 +221,7 @@ func (h *GroupHandler) Update(c *gin.Context) {
 		ImagePrice1K:     req.ImagePrice1K,
 		ImagePrice2K:     req.ImagePrice2K,
 		ImagePrice4K:     req.ImagePrice4K,
+		ModelRates:       modelRates,
 	})
 	if err != nil {
 		response.ErrorFrom(c, err)
@@ -256,4 +290,31 @@ func (h *GroupHandler) GetGroupAPIKeys(c *gin.Context) {
 		outKeys = append(outKeys, *dto.APIKeyFromService(&keys[i]))
 	}
 	response.Paginated(c, outKeys, total, page, pageSize)
+}
+
+// GetAvailableModels handles getting available models for a group
+// GET /api/v1/admin/groups/:id/models
+// GET /api/v1/admin/groups/models?platform=xxx (for new group creation)
+func (h *GroupHandler) GetAvailableModels(c *gin.Context) {
+	var groupID *int64
+	platform := c.Query("platform")
+
+	// Check if we have a group ID in the path
+	idParam := c.Param("id")
+	if idParam != "" {
+		id, err := strconv.ParseInt(idParam, 10, 64)
+		if err != nil {
+			response.BadRequest(c, "Invalid group ID")
+			return
+		}
+		groupID = &id
+	}
+
+	models, err := h.adminService.GetGroupAvailableModels(c.Request.Context(), groupID, platform)
+	if err != nil {
+		response.ErrorFrom(c, err)
+		return
+	}
+
+	response.Success(c, models)
 }

@@ -267,6 +267,20 @@ func (_c *UsageLogCreate) SetNillableRateMultiplier(v *float64) *UsageLogCreate 
 	return _c
 }
 
+// SetRateSource sets the "rate_source" field.
+func (_c *UsageLogCreate) SetRateSource(v string) *UsageLogCreate {
+	_c.mutation.SetRateSource(v)
+	return _c
+}
+
+// SetNillableRateSource sets the "rate_source" field if the given value is not nil.
+func (_c *UsageLogCreate) SetNillableRateSource(v *string) *UsageLogCreate {
+	if v != nil {
+		_c.SetRateSource(*v)
+	}
+	return _c
+}
+
 // SetBillingType sets the "billing_type" field.
 func (_c *UsageLogCreate) SetBillingType(v int8) *UsageLogCreate {
 	_c.mutation.SetBillingType(v)
@@ -477,6 +491,10 @@ func (_c *UsageLogCreate) defaults() {
 		v := usagelog.DefaultRateMultiplier
 		_c.mutation.SetRateMultiplier(v)
 	}
+	if _, ok := _c.mutation.RateSource(); !ok {
+		v := usagelog.DefaultRateSource
+		_c.mutation.SetRateSource(v)
+	}
 	if _, ok := _c.mutation.BillingType(); !ok {
 		v := usagelog.DefaultBillingType
 		_c.mutation.SetBillingType(v)
@@ -560,6 +578,14 @@ func (_c *UsageLogCreate) check() error {
 	}
 	if _, ok := _c.mutation.RateMultiplier(); !ok {
 		return &ValidationError{Name: "rate_multiplier", err: errors.New(`ent: missing required field "UsageLog.rate_multiplier"`)}
+	}
+	if _, ok := _c.mutation.RateSource(); !ok {
+		return &ValidationError{Name: "rate_source", err: errors.New(`ent: missing required field "UsageLog.rate_source"`)}
+	}
+	if v, ok := _c.mutation.RateSource(); ok {
+		if err := usagelog.RateSourceValidator(v); err != nil {
+			return &ValidationError{Name: "rate_source", err: fmt.Errorf(`ent: validator failed for field "UsageLog.rate_source": %w`, err)}
+		}
 	}
 	if _, ok := _c.mutation.BillingType(); !ok {
 		return &ValidationError{Name: "billing_type", err: errors.New(`ent: missing required field "UsageLog.billing_type"`)}
@@ -673,6 +699,10 @@ func (_c *UsageLogCreate) createSpec() (*UsageLog, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.RateMultiplier(); ok {
 		_spec.SetField(usagelog.FieldRateMultiplier, field.TypeFloat64, value)
 		_node.RateMultiplier = value
+	}
+	if value, ok := _c.mutation.RateSource(); ok {
+		_spec.SetField(usagelog.FieldRateSource, field.TypeString, value)
+		_node.RateSource = value
 	}
 	if value, ok := _c.mutation.BillingType(); ok {
 		_spec.SetField(usagelog.FieldBillingType, field.TypeInt8, value)
@@ -1166,6 +1196,18 @@ func (u *UsageLogUpsert) UpdateRateMultiplier() *UsageLogUpsert {
 // AddRateMultiplier adds v to the "rate_multiplier" field.
 func (u *UsageLogUpsert) AddRateMultiplier(v float64) *UsageLogUpsert {
 	u.Add(usagelog.FieldRateMultiplier, v)
+	return u
+}
+
+// SetRateSource sets the "rate_source" field.
+func (u *UsageLogUpsert) SetRateSource(v string) *UsageLogUpsert {
+	u.Set(usagelog.FieldRateSource, v)
+	return u
+}
+
+// UpdateRateSource sets the "rate_source" field to the value that was provided on create.
+func (u *UsageLogUpsert) UpdateRateSource() *UsageLogUpsert {
+	u.SetExcluded(usagelog.FieldRateSource)
 	return u
 }
 
@@ -1710,6 +1752,20 @@ func (u *UsageLogUpsertOne) AddRateMultiplier(v float64) *UsageLogUpsertOne {
 func (u *UsageLogUpsertOne) UpdateRateMultiplier() *UsageLogUpsertOne {
 	return u.Update(func(s *UsageLogUpsert) {
 		s.UpdateRateMultiplier()
+	})
+}
+
+// SetRateSource sets the "rate_source" field.
+func (u *UsageLogUpsertOne) SetRateSource(v string) *UsageLogUpsertOne {
+	return u.Update(func(s *UsageLogUpsert) {
+		s.SetRateSource(v)
+	})
+}
+
+// UpdateRateSource sets the "rate_source" field to the value that was provided on create.
+func (u *UsageLogUpsertOne) UpdateRateSource() *UsageLogUpsertOne {
+	return u.Update(func(s *UsageLogUpsert) {
+		s.UpdateRateSource()
 	})
 }
 
@@ -2439,6 +2495,20 @@ func (u *UsageLogUpsertBulk) AddRateMultiplier(v float64) *UsageLogUpsertBulk {
 func (u *UsageLogUpsertBulk) UpdateRateMultiplier() *UsageLogUpsertBulk {
 	return u.Update(func(s *UsageLogUpsert) {
 		s.UpdateRateMultiplier()
+	})
+}
+
+// SetRateSource sets the "rate_source" field.
+func (u *UsageLogUpsertBulk) SetRateSource(v string) *UsageLogUpsertBulk {
+	return u.Update(func(s *UsageLogUpsert) {
+		s.SetRateSource(v)
+	})
+}
+
+// UpdateRateSource sets the "rate_source" field to the value that was provided on create.
+func (u *UsageLogUpsertBulk) UpdateRateSource() *UsageLogUpsertBulk {
+	return u.Update(func(s *UsageLogUpsert) {
+		s.UpdateRateSource()
 	})
 }
 

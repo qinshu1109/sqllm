@@ -65,19 +65,21 @@ func ProvideHandlers(
 	adminHandlers *AdminHandlers,
 	gatewayHandler *GatewayHandler,
 	openaiGatewayHandler *OpenAIGatewayHandler,
+	chatCompletionsHandler *ChatCompletionsHandler,
 	settingHandler *SettingHandler,
 ) *Handlers {
 	return &Handlers{
-		Auth:          authHandler,
-		User:          userHandler,
-		APIKey:        apiKeyHandler,
-		Usage:         usageHandler,
-		Redeem:        redeemHandler,
-		Subscription:  subscriptionHandler,
-		Admin:         adminHandlers,
-		Gateway:       gatewayHandler,
-		OpenAIGateway: openaiGatewayHandler,
-		Setting:       settingHandler,
+		Auth:            authHandler,
+		User:            userHandler,
+		APIKey:          apiKeyHandler,
+		Usage:           usageHandler,
+		Redeem:          redeemHandler,
+		Subscription:    subscriptionHandler,
+		Admin:           adminHandlers,
+		Gateway:         gatewayHandler,
+		OpenAIGateway:   openaiGatewayHandler,
+		ChatCompletions: chatCompletionsHandler,
+		Setting:         settingHandler,
 	}
 }
 
@@ -92,6 +94,7 @@ var ProviderSet = wire.NewSet(
 	NewSubscriptionHandler,
 	NewGatewayHandler,
 	NewOpenAIGatewayHandler,
+	NewChatCompletionsHandler,
 	ProvideSettingHandler,
 
 	// Admin handlers

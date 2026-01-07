@@ -8,6 +8,7 @@ import (
 	dbent "github.com/Wei-Shaw/sub2api/ent"
 	"github.com/Wei-Shaw/sub2api/ent/apikey"
 	"github.com/Wei-Shaw/sub2api/ent/group"
+	"github.com/Wei-Shaw/sub2api/ent/groupmodelrate"
 	"github.com/Wei-Shaw/sub2api/internal/pkg/pagination"
 	"github.com/Wei-Shaw/sub2api/internal/service"
 	"github.com/lib/pq"
@@ -366,4 +367,120 @@ func (r *groupRepository) loadAccountCounts(ctx context.Context, groupIDs []int6
 	}
 
 	return counts, nil
+}
+
+// ==================== Model Rates Methods ====================
+
+// GetModelRates returns all model-specific rate configurations for a group
+func (r *groupRepository) GetModelRates(ctx context.Context, groupID int64) ([]service.GroupModelRate, error) {
+	rates, err := r.client.GroupModelRate.Query().
+		Where(groupmodelrate.GroupIDEQ(groupID)).
+		Order(dbent.Asc(groupmodelrate.FieldModel)).
+		All(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	result := make([]service.GroupModelRate, len(rates))
+	for i, rate := range rates {
+		result[i] = service.GroupModelRate{
+			ID:             rate.ID,
+			GroupID:        rate.GroupID,
+			Model:          rate.Model,
+			RateMultiplier: rate.RateMultiplier,
+			CreatedAt:      rate.CreatedAt,
+			UpdatedAt:      rate.UpdatedAt,
+		}
+	}
+	return result, nil
+}
+
+// SetModelRates replaces all model rates for a group with the provided list
+// This is an atomic operation - it deletes existing rates and creates new ones
+func (r *groupRepository) SetModelRates(ctx context.Context, groupID int64, rates []service.GroupModelRate) error {
+	// Use transaction for atomicity
+	tx, err := r.client.Tx(ctx)
+	if err != nil && !errors.Is(err, dbent.ErrTxStarted) {
+		return err
+	}
+	client := r.client
+	if err == nil {
+		defer func() { _ = tx.Rollback() }()
+		client = tx.Client()
+	}
+
+	// Delete existing rates
+	_, err = client.GroupModelRate.Delete().
+		Where(groupmodelrate.GroupIDEQ(groupID)).
+		Exec(ctx)
+	if err != nil {
+		return err
+	}
+
+	// Create new rates
+	if len(rates) > 0 {
+		bulk := make([]*dbent.GroupModelRateCreate, len(rates))
+		for i, rate := range rates {
+			bulk[i] = client.GroupModelRate.Create().
+				SetGroupID(groupID).
+				SetModel(rate.Model).
+				SetRateMultiplier(rate.RateMultiplier)
+		}
+		_, err = client.GroupModelRate.CreateBulk(bulk...).Save(ctx)
+		if err != nil {
+			return err
+		}
+	}
+
+	if tx != nil {
+		return tx.Commit()
+	}
+	return nil
+}
+
+// GetByIDWithModelRates returns a group with its model rates preloaded
+func (r *groupRepository) GetByIDWithModelRates(ctx context.Context, id int64) (*service.Group, error) {
+	m, err := r.client.Group.Query().
+		Where(group.IDEQ(id)).
+		WithModelRates().
+		Only(ctx)
+	if err != nil {
+		return nil, translatePersistenceError(err, service.ErrGroupNotFound, nil)
+	}
+
+	out := groupEntityToService(m)
+	count, _ := r.GetAccountCount(ctx, out.ID)
+	out.AccountCount = count
+
+	// Convert model rates
+	if m.Edges.ModelRates != nil {
+		out.ModelRates = make([]service.GroupModelRate, len(m.Edges.ModelRates))
+		for i, rate := range m.Edges.ModelRates {
+			out.ModelRates[i] = service.GroupModelRate{
+				ID:             rate.ID,
+				GroupID:        rate.GroupID,
+				Model:          rate.Model,
+				RateMultiplier: rate.RateMultiplier,
+				CreatedAt:      rate.CreatedAt,
+				UpdatedAt:      rate.UpdatedAt,
+			}
+		}
+	}
+
+	return out, nil
+}
+
+// GetModelRateForModel returns the rate multiplier for a specific model in a group
+// Returns (multiplier, source, found) where source is "model" or "group"
+func (r *groupRepository) GetModelRateForModel(ctx context.Context, groupID int64, model string) (float64, string, bool) {
+	rate, err := r.client.GroupModelRate.Query().
+		Where(
+			groupmodelrate.GroupIDEQ(groupID),
+			groupmodelrate.ModelEQ(model),
+		).
+		Only(ctx)
+	if err != nil {
+		return 0, "", false
+	}
+	return rate.RateMultiplier, "model", true
 }
