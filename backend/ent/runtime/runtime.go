@@ -9,6 +9,7 @@ import (
 	"github.com/Wei-Shaw/sub2api/ent/accountgroup"
 	"github.com/Wei-Shaw/sub2api/ent/apikey"
 	"github.com/Wei-Shaw/sub2api/ent/group"
+	"github.com/Wei-Shaw/sub2api/ent/groupmodelrate"
 	"github.com/Wei-Shaw/sub2api/ent/proxy"
 	"github.com/Wei-Shaw/sub2api/ent/redeemcode"
 	"github.com/Wei-Shaw/sub2api/ent/schema"
@@ -266,6 +267,40 @@ func init() {
 	groupDescDefaultValidityDays := groupFields[10].Descriptor()
 	// group.DefaultDefaultValidityDays holds the default value on creation for the default_validity_days field.
 	group.DefaultDefaultValidityDays = groupDescDefaultValidityDays.Default.(int)
+	groupmodelrateFields := schema.GroupModelRate{}.Fields()
+	_ = groupmodelrateFields
+	// groupmodelrateDescModel is the schema descriptor for model field.
+	groupmodelrateDescModel := groupmodelrateFields[1].Descriptor()
+	// groupmodelrate.ModelValidator is a validator for the "model" field. It is called by the builders before save.
+	groupmodelrate.ModelValidator = func() func(string) error {
+		validators := groupmodelrateDescModel.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+		}
+		return func(model string) error {
+			for _, fn := range fns {
+				if err := fn(model); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	// groupmodelrateDescRateMultiplier is the schema descriptor for rate_multiplier field.
+	groupmodelrateDescRateMultiplier := groupmodelrateFields[2].Descriptor()
+	// groupmodelrate.DefaultRateMultiplier holds the default value on creation for the rate_multiplier field.
+	groupmodelrate.DefaultRateMultiplier = groupmodelrateDescRateMultiplier.Default.(float64)
+	// groupmodelrateDescCreatedAt is the schema descriptor for created_at field.
+	groupmodelrateDescCreatedAt := groupmodelrateFields[3].Descriptor()
+	// groupmodelrate.DefaultCreatedAt holds the default value on creation for the created_at field.
+	groupmodelrate.DefaultCreatedAt = groupmodelrateDescCreatedAt.Default.(func() time.Time)
+	// groupmodelrateDescUpdatedAt is the schema descriptor for updated_at field.
+	groupmodelrateDescUpdatedAt := groupmodelrateFields[4].Descriptor()
+	// groupmodelrate.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	groupmodelrate.DefaultUpdatedAt = groupmodelrateDescUpdatedAt.Default.(func() time.Time)
+	// groupmodelrate.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	groupmodelrate.UpdateDefaultUpdatedAt = groupmodelrateDescUpdatedAt.UpdateDefault.(func() time.Time)
 	proxyMixin := schema.Proxy{}.Mixin()
 	proxyMixinHooks1 := proxyMixin[1].Hooks()
 	proxy.Hooks[0] = proxyMixinHooks1[0]
@@ -513,24 +548,30 @@ func init() {
 	usagelogDescRateMultiplier := usagelogFields[19].Descriptor()
 	// usagelog.DefaultRateMultiplier holds the default value on creation for the rate_multiplier field.
 	usagelog.DefaultRateMultiplier = usagelogDescRateMultiplier.Default.(float64)
+	// usagelogDescRateSource is the schema descriptor for rate_source field.
+	usagelogDescRateSource := usagelogFields[20].Descriptor()
+	// usagelog.DefaultRateSource holds the default value on creation for the rate_source field.
+	usagelog.DefaultRateSource = usagelogDescRateSource.Default.(string)
+	// usagelog.RateSourceValidator is a validator for the "rate_source" field. It is called by the builders before save.
+	usagelog.RateSourceValidator = usagelogDescRateSource.Validators[0].(func(string) error)
 	// usagelogDescBillingType is the schema descriptor for billing_type field.
-	usagelogDescBillingType := usagelogFields[20].Descriptor()
+	usagelogDescBillingType := usagelogFields[21].Descriptor()
 	// usagelog.DefaultBillingType holds the default value on creation for the billing_type field.
 	usagelog.DefaultBillingType = usagelogDescBillingType.Default.(int8)
 	// usagelogDescStream is the schema descriptor for stream field.
-	usagelogDescStream := usagelogFields[21].Descriptor()
+	usagelogDescStream := usagelogFields[22].Descriptor()
 	// usagelog.DefaultStream holds the default value on creation for the stream field.
 	usagelog.DefaultStream = usagelogDescStream.Default.(bool)
 	// usagelogDescImageCount is the schema descriptor for image_count field.
-	usagelogDescImageCount := usagelogFields[24].Descriptor()
+	usagelogDescImageCount := usagelogFields[25].Descriptor()
 	// usagelog.DefaultImageCount holds the default value on creation for the image_count field.
 	usagelog.DefaultImageCount = usagelogDescImageCount.Default.(int)
 	// usagelogDescImageSize is the schema descriptor for image_size field.
-	usagelogDescImageSize := usagelogFields[25].Descriptor()
+	usagelogDescImageSize := usagelogFields[26].Descriptor()
 	// usagelog.ImageSizeValidator is a validator for the "image_size" field. It is called by the builders before save.
 	usagelog.ImageSizeValidator = usagelogDescImageSize.Validators[0].(func(string) error)
 	// usagelogDescCreatedAt is the schema descriptor for created_at field.
-	usagelogDescCreatedAt := usagelogFields[26].Descriptor()
+	usagelogDescCreatedAt := usagelogFields[27].Descriptor()
 	// usagelog.DefaultCreatedAt holds the default value on creation for the created_at field.
 	usagelog.DefaultCreatedAt = usagelogDescCreatedAt.Default.(func() time.Time)
 	userMixin := schema.User{}.Mixin()

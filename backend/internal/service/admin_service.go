@@ -8,6 +8,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Wei-Shaw/sub2api/internal/pkg/claude"
+	"github.com/Wei-Shaw/sub2api/internal/pkg/geminicli"
+	"github.com/Wei-Shaw/sub2api/internal/pkg/openai"
 	"github.com/Wei-Shaw/sub2api/internal/pkg/pagination"
 )
 
@@ -32,6 +35,7 @@ type AdminService interface {
 	UpdateGroup(ctx context.Context, id int64, input *UpdateGroupInput) (*Group, error)
 	DeleteGroup(ctx context.Context, id int64) error
 	GetGroupAPIKeys(ctx context.Context, groupID int64, page, pageSize int) ([]APIKey, int64, error)
+	GetGroupAvailableModels(ctx context.Context, groupID *int64, platform string) ([]string, error)
 
 	// Account management
 	ListAccounts(ctx context.Context, page, pageSize int, platform, accountType, status, search string) ([]Account, int64, error)
@@ -88,6 +92,12 @@ type UpdateUserInput struct {
 	AllowedGroups *[]int64 // 使用指针区分"未提供"和"设置为空数组"
 }
 
+// GroupModelRateInput represents input for setting model-specific rate multiplier
+type GroupModelRateInput struct {
+	Model          string
+	RateMultiplier float64
+}
+
 type CreateGroupInput struct {
 	Name             string
 	Description      string
@@ -102,6 +112,8 @@ type CreateGroupInput struct {
 	ImagePrice1K *float64
 	ImagePrice2K *float64
 	ImagePrice4K *float64
+	// 模型费率配置
+	ModelRates []GroupModelRateInput
 }
 
 type UpdateGroupInput struct {
@@ -119,6 +131,8 @@ type UpdateGroupInput struct {
 	ImagePrice1K *float64
 	ImagePrice2K *float64
 	ImagePrice4K *float64
+	// 模型费率配置（nil 表示不更新，空数组表示清除所有）
+	ModelRates *[]GroupModelRateInput
 }
 
 type CreateAccountInput struct {
@@ -487,7 +501,7 @@ func (s *adminServiceImpl) GetAllGroupsByPlatform(ctx context.Context, platform 
 }
 
 func (s *adminServiceImpl) GetGroup(ctx context.Context, id int64) (*Group, error) {
-	return s.groupRepo.GetByID(ctx, id)
+	return s.groupRepo.GetByIDWithModelRates(ctx, id)
 }
 
 func (s *adminServiceImpl) CreateGroup(ctx context.Context, input *CreateGroupInput) (*Group, error) {
@@ -529,6 +543,23 @@ func (s *adminServiceImpl) CreateGroup(ctx context.Context, input *CreateGroupIn
 	if err := s.groupRepo.Create(ctx, group); err != nil {
 		return nil, err
 	}
+
+	// 设置模型费率
+	if len(input.ModelRates) > 0 {
+		rates := make([]GroupModelRate, 0, len(input.ModelRates))
+		for _, mr := range input.ModelRates {
+			rates = append(rates, GroupModelRate{
+				Model:          mr.Model,
+				RateMultiplier: mr.RateMultiplier,
+			})
+		}
+		if err := s.groupRepo.SetModelRates(ctx, group.ID, rates); err != nil {
+			return nil, err
+		}
+		// 重新加载以包含模型费率
+		return s.groupRepo.GetByIDWithModelRates(ctx, group.ID)
+	}
+
 	return group, nil
 }
 
@@ -601,6 +632,23 @@ func (s *adminServiceImpl) UpdateGroup(ctx context.Context, id int64, input *Upd
 	if err := s.groupRepo.Update(ctx, group); err != nil {
 		return nil, err
 	}
+
+	// 更新模型费率（nil 表示不更新，空数组表示清除所有）
+	if input.ModelRates != nil {
+		rates := make([]GroupModelRate, 0, len(*input.ModelRates))
+		for _, mr := range *input.ModelRates {
+			rates = append(rates, GroupModelRate{
+				Model:          mr.Model,
+				RateMultiplier: mr.RateMultiplier,
+			})
+		}
+		if err := s.groupRepo.SetModelRates(ctx, id, rates); err != nil {
+			return nil, err
+		}
+		// 重新加载以包含更新后的模型费率
+		return s.groupRepo.GetByIDWithModelRates(ctx, id)
+	}
+
 	return group, nil
 }
 
@@ -634,6 +682,102 @@ func (s *adminServiceImpl) GetGroupAPIKeys(ctx context.Context, groupID int64, p
 		return nil, 0, err
 	}
 	return keys, result.Total, nil
+}
+
+// GetGroupAvailableModels returns the list of models available for a group
+// It aggregates model_mapping keys from all schedulable accounts in the group
+// If an account has no model_mapping, it falls back to default models for that platform
+func (s *adminServiceImpl) GetGroupAvailableModels(ctx context.Context, groupID *int64, platform string) ([]string, error) {
+	var accounts []Account
+	var err error
+
+	if groupID != nil {
+		accounts, err = s.accountRepo.ListSchedulableByGroupID(ctx, *groupID)
+	} else {
+		accounts, err = s.accountRepo.ListSchedulable(ctx)
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(accounts) == 0 {
+		return []string{}, nil
+	}
+
+	// Filter by platform if specified
+	if platform != "" {
+		filtered := make([]Account, 0)
+		for _, acc := range accounts {
+			if acc.Platform == platform {
+				filtered = append(filtered, acc)
+			}
+		}
+		accounts = filtered
+	}
+
+	// Collect unique models from all accounts
+	modelSet := make(map[string]struct{})
+
+	for _, acc := range accounts {
+		mapping := acc.GetModelMapping()
+		if len(mapping) > 0 {
+			// Account has model_mapping, use it
+			for model := range mapping {
+				modelSet[model] = struct{}{}
+			}
+		} else {
+			// No model_mapping, fall back to default models for this platform
+			defaultModels := getDefaultModelsForPlatform(acc.Platform)
+			for _, model := range defaultModels {
+				modelSet[model] = struct{}{}
+			}
+		}
+	}
+
+	// Convert to slice
+	models := make([]string, 0, len(modelSet))
+	for model := range modelSet {
+		models = append(models, model)
+	}
+
+	return models, nil
+}
+
+// getDefaultModelsForPlatform returns default model IDs for a given platform
+func getDefaultModelsForPlatform(platform string) []string {
+	switch platform {
+	case PlatformAnthropic:
+		models := make([]string, 0, len(claude.DefaultModels))
+		for _, m := range claude.DefaultModels {
+			models = append(models, m.ID)
+		}
+		return models
+	case PlatformOpenAI:
+		models := make([]string, 0, len(openai.DefaultModels))
+		for _, m := range openai.DefaultModels {
+			models = append(models, m.ID)
+		}
+		return models
+	case PlatformGemini:
+		models := make([]string, 0, len(geminicli.DefaultModels))
+		for _, m := range geminicli.DefaultModels {
+			models = append(models, m.ID)
+		}
+		return models
+	case PlatformAntigravity:
+		// Antigravity supports both Claude and Gemini models
+		models := make([]string, 0, len(claude.DefaultModels)+len(geminicli.DefaultModels))
+		for _, m := range claude.DefaultModels {
+			models = append(models, m.ID)
+		}
+		for _, m := range geminicli.DefaultModels {
+			models = append(models, m.ID)
+		}
+		return models
+	default:
+		return []string{}
+	}
 }
 
 // Account management implementations

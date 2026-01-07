@@ -79,6 +79,7 @@ type OpenAIForwardResult struct {
 // OpenAIGatewayService handles OpenAI API gateway operations
 type OpenAIGatewayService struct {
 	accountRepo         AccountRepository
+	groupRepo           GroupRepository
 	usageLogRepo        UsageLogRepository
 	userRepo            UserRepository
 	userSubRepo         UserSubscriptionRepository
@@ -95,6 +96,7 @@ type OpenAIGatewayService struct {
 // NewOpenAIGatewayService creates a new OpenAIGatewayService
 func NewOpenAIGatewayService(
 	accountRepo AccountRepository,
+	groupRepo GroupRepository,
 	usageLogRepo UsageLogRepository,
 	userRepo UserRepository,
 	userSubRepo UserSubscriptionRepository,
@@ -109,6 +111,7 @@ func NewOpenAIGatewayService(
 ) *OpenAIGatewayService {
 	return &OpenAIGatewayService{
 		accountRepo:         accountRepo,
+		groupRepo:           groupRepo,
 		usageLogRepo:        usageLogRepo,
 		userRepo:            userRepo,
 		userSubRepo:         userSubRepo,
@@ -1117,10 +1120,22 @@ func (s *OpenAIGatewayService) RecordUsage(ctx context.Context, input *OpenAIRec
 		CacheReadTokens:     result.Usage.CacheReadInputTokens,
 	}
 
-	// Get rate multiplier
+	// Get rate multiplier and source
 	multiplier := s.cfg.Default.RateMultiplier
+	rateSource := "group"
 	if apiKey.GroupID != nil && apiKey.Group != nil {
-		multiplier = apiKey.Group.RateMultiplier
+		// 优先检查模型专属费率
+		if len(apiKey.Group.ModelRates) > 0 {
+			multiplier, rateSource = apiKey.Group.GetRateMultiplierForModel(result.Model)
+		} else {
+			if modelRate, source, found := s.groupRepo.GetModelRateForModel(ctx, *apiKey.GroupID, result.Model); found {
+				multiplier = modelRate
+				rateSource = source
+			} else {
+				multiplier = apiKey.Group.RateMultiplier
+				rateSource = "group"
+			}
+		}
 	}
 
 	cost, err := s.billingService.CalculateCost(result.Model, tokens, multiplier)
@@ -1154,6 +1169,7 @@ func (s *OpenAIGatewayService) RecordUsage(ctx context.Context, input *OpenAIRec
 		TotalCost:           cost.TotalCost,
 		ActualCost:          cost.ActualCost,
 		RateMultiplier:      multiplier,
+		RateSource:          rateSource,
 		BillingType:         billingType,
 		Stream:              result.Stream,
 		DurationMs:          &durationMs,

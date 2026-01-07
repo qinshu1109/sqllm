@@ -105,6 +105,7 @@ func (r *usageLogRepository) Create(ctx context.Context, log *service.UsageLog) 
 			total_cost,
 			actual_cost,
 			rate_multiplier,
+			rate_source,
 			billing_type,
 			stream,
 			duration_ms,
@@ -118,8 +119,8 @@ func (r *usageLogRepository) Create(ctx context.Context, log *service.UsageLog) 
 			$8, $9, $10, $11,
 			$12, $13,
 			$14, $15, $16, $17, $18, $19,
-			$20, $21, $22, $23, $24,
-			$25, $26, $27
+			$20, $21, $22, $23, $24, $25,
+			$26, $27, $28
 		)
 		ON CONFLICT (request_id, api_key_id) DO NOTHING
 		RETURNING id, created_at
@@ -134,6 +135,11 @@ func (r *usageLogRepository) Create(ctx context.Context, log *service.UsageLog) 
 	var requestIDArg any
 	if requestID != "" {
 		requestIDArg = requestID
+	}
+
+	rateSource := log.RateSource
+	if rateSource == "" {
+		rateSource = "group"
 	}
 
 	args := []any{
@@ -157,6 +163,7 @@ func (r *usageLogRepository) Create(ctx context.Context, log *service.UsageLog) 
 		log.TotalCost,
 		log.ActualCost,
 		rateMultiplier,
+		rateSource,
 		log.BillingType,
 		log.Stream,
 		duration,

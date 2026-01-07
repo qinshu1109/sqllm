@@ -33,6 +33,7 @@ type UsageLog struct {
 	TotalCost         float64
 	ActualCost        float64
 	RateMultiplier    float64
+	RateSource        string // "group" or "model"
 
 	BillingType  int8
 	Stream       bool

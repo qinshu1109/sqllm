@@ -383,6 +383,7 @@ export default {
     perRequest: '每次请求',
     apiKeyFilter: 'API 密钥',
     allApiKeys: '全部密钥',
+    allModels: '全部模型',
     timeRange: '时间范围',
     exportCsv: '导出 CSV',
     exportExcel: '导出 Excel',
@@ -931,6 +932,13 @@ export default {
       imagePricing: {
         title: '图片生成计费',
         description: '配置 gemini-3-pro-image 模型的图片生成价格，留空则使用默认价格'
+      },
+      modelRates: {
+        title: '模型费率配置',
+        description: '为特定模型设置独立费率倍数，优先于分组默认费率。未配置的模型使用分组默认费率。',
+        add: '添加模型',
+        selectModel: '选择模型',
+        empty: '暂未配置模型费率，将使用分组默认费率'
       }
     },
 

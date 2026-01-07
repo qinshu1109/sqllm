@@ -14,6 +14,7 @@ import (
 	"github.com/Wei-Shaw/sub2api/ent/account"
 	"github.com/Wei-Shaw/sub2api/ent/apikey"
 	"github.com/Wei-Shaw/sub2api/ent/group"
+	"github.com/Wei-Shaw/sub2api/ent/groupmodelrate"
 	"github.com/Wei-Shaw/sub2api/ent/predicate"
 	"github.com/Wei-Shaw/sub2api/ent/redeemcode"
 	"github.com/Wei-Shaw/sub2api/ent/usagelog"
@@ -414,6 +415,21 @@ func (_u *GroupUpdate) AddUsageLogs(v ...*UsageLog) *GroupUpdate {
 	return _u.AddUsageLogIDs(ids...)
 }
 
+// AddModelRateIDs adds the "model_rates" edge to the GroupModelRate entity by IDs.
+func (_u *GroupUpdate) AddModelRateIDs(ids ...int64) *GroupUpdate {
+	_u.mutation.AddModelRateIDs(ids...)
+	return _u
+}
+
+// AddModelRates adds the "model_rates" edges to the GroupModelRate entity.
+func (_u *GroupUpdate) AddModelRates(v ...*GroupModelRate) *GroupUpdate {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddModelRateIDs(ids...)
+}
+
 // AddAccountIDs adds the "accounts" edge to the Account entity by IDs.
 func (_u *GroupUpdate) AddAccountIDs(ids ...int64) *GroupUpdate {
 	_u.mutation.AddAccountIDs(ids...)
@@ -531,6 +547,27 @@ func (_u *GroupUpdate) RemoveUsageLogs(v ...*UsageLog) *GroupUpdate {
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveUsageLogIDs(ids...)
+}
+
+// ClearModelRates clears all "model_rates" edges to the GroupModelRate entity.
+func (_u *GroupUpdate) ClearModelRates() *GroupUpdate {
+	_u.mutation.ClearModelRates()
+	return _u
+}
+
+// RemoveModelRateIDs removes the "model_rates" edge to GroupModelRate entities by IDs.
+func (_u *GroupUpdate) RemoveModelRateIDs(ids ...int64) *GroupUpdate {
+	_u.mutation.RemoveModelRateIDs(ids...)
+	return _u
+}
+
+// RemoveModelRates removes "model_rates" edges to GroupModelRate entities.
+func (_u *GroupUpdate) RemoveModelRates(v ...*GroupModelRate) *GroupUpdate {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveModelRateIDs(ids...)
 }
 
 // ClearAccounts clears all "accounts" edges to the Account entity.
@@ -923,6 +960,51 @@ func (_u *GroupUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(usagelog.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.ModelRatesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   group.ModelRatesTable,
+			Columns: []string{group.ModelRatesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(groupmodelrate.FieldID, field.TypeInt64),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedModelRatesIDs(); len(nodes) > 0 && !_u.mutation.ModelRatesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   group.ModelRatesTable,
+			Columns: []string{group.ModelRatesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(groupmodelrate.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.ModelRatesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   group.ModelRatesTable,
+			Columns: []string{group.ModelRatesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(groupmodelrate.FieldID, field.TypeInt64),
 			},
 		}
 		for _, k := range nodes {
@@ -1444,6 +1526,21 @@ func (_u *GroupUpdateOne) AddUsageLogs(v ...*UsageLog) *GroupUpdateOne {
 	return _u.AddUsageLogIDs(ids...)
 }
 
+// AddModelRateIDs adds the "model_rates" edge to the GroupModelRate entity by IDs.
+func (_u *GroupUpdateOne) AddModelRateIDs(ids ...int64) *GroupUpdateOne {
+	_u.mutation.AddModelRateIDs(ids...)
+	return _u
+}
+
+// AddModelRates adds the "model_rates" edges to the GroupModelRate entity.
+func (_u *GroupUpdateOne) AddModelRates(v ...*GroupModelRate) *GroupUpdateOne {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddModelRateIDs(ids...)
+}
+
 // AddAccountIDs adds the "accounts" edge to the Account entity by IDs.
 func (_u *GroupUpdateOne) AddAccountIDs(ids ...int64) *GroupUpdateOne {
 	_u.mutation.AddAccountIDs(ids...)
@@ -1561,6 +1658,27 @@ func (_u *GroupUpdateOne) RemoveUsageLogs(v ...*UsageLog) *GroupUpdateOne {
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveUsageLogIDs(ids...)
+}
+
+// ClearModelRates clears all "model_rates" edges to the GroupModelRate entity.
+func (_u *GroupUpdateOne) ClearModelRates() *GroupUpdateOne {
+	_u.mutation.ClearModelRates()
+	return _u
+}
+
+// RemoveModelRateIDs removes the "model_rates" edge to GroupModelRate entities by IDs.
+func (_u *GroupUpdateOne) RemoveModelRateIDs(ids ...int64) *GroupUpdateOne {
+	_u.mutation.RemoveModelRateIDs(ids...)
+	return _u
+}
+
+// RemoveModelRates removes "model_rates" edges to GroupModelRate entities.
+func (_u *GroupUpdateOne) RemoveModelRates(v ...*GroupModelRate) *GroupUpdateOne {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveModelRateIDs(ids...)
 }
 
 // ClearAccounts clears all "accounts" edges to the Account entity.
@@ -1983,6 +2101,51 @@ func (_u *GroupUpdateOne) sqlSave(ctx context.Context) (_node *Group, err error)
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(usagelog.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.ModelRatesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   group.ModelRatesTable,
+			Columns: []string{group.ModelRatesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(groupmodelrate.FieldID, field.TypeInt64),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedModelRatesIDs(); len(nodes) > 0 && !_u.mutation.ModelRatesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   group.ModelRatesTable,
+			Columns: []string{group.ModelRatesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(groupmodelrate.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.ModelRatesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   group.ModelRatesTable,
+			Columns: []string{group.ModelRatesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(groupmodelrate.FieldID, field.TypeInt64),
 			},
 		}
 		for _, k := range nodes {

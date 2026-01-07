@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"log"
 	"strings"
 )
 
@@ -32,6 +33,7 @@ type StreamingProcessor struct {
 	inputTokens     int
 	outputTokens    int
 	cacheReadTokens int
+	totalInputTokens int // 包含缓存的总输入 tokens（用于缓存监控）
 }
 
 // NewStreamingProcessor 创建流式响应处理器
@@ -81,9 +83,11 @@ func (p *StreamingProcessor) ProcessLine(line string) []byte {
 	// 但 Claude 的 input_tokens 不包含 cache_read_input_tokens，需要减去
 	if geminiResp.UsageMetadata != nil {
 		cached := geminiResp.UsageMetadata.CachedContentTokenCount
-		p.inputTokens = geminiResp.UsageMetadata.PromptTokenCount - cached
+		totalInput := geminiResp.UsageMetadata.PromptTokenCount
+		p.inputTokens = totalInput - cached
 		p.outputTokens = geminiResp.UsageMetadata.CandidatesTokenCount
 		p.cacheReadTokens = cached
+		p.totalInputTokens = totalInput
 	}
 
 	// 处理 parts
@@ -116,6 +120,13 @@ func (p *StreamingProcessor) Finish() ([]byte, *ClaudeUsage) {
 		InputTokens:          p.inputTokens,
 		OutputTokens:         p.outputTokens,
 		CacheReadInputTokens: p.cacheReadTokens,
+	}
+
+	// 缓存监控日志：记录缓存命中情况（流式）
+	if p.totalInputTokens > 0 {
+		cacheHitRate := float64(p.cacheReadTokens) / float64(p.totalInputTokens) * 100
+		log.Printf("[Antigravity Cache] model=%s total_input=%d cached=%d hit_rate=%.1f%% (stream)",
+			p.originalModel, p.totalInputTokens, p.cacheReadTokens, cacheHitRate)
 	}
 
 	return result.Bytes(), usage

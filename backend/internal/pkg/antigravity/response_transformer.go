@@ -3,6 +3,7 @@ package antigravity
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 )
 
 // TransformGeminiToClaude 将 Gemini 响应转换为 Claude 格式（非流式）
@@ -237,9 +238,17 @@ func (p *NonStreamingProcessor) buildResponse(geminiResp *GeminiResponse, respon
 	usage := ClaudeUsage{}
 	if geminiResp.UsageMetadata != nil {
 		cached := geminiResp.UsageMetadata.CachedContentTokenCount
-		usage.InputTokens = geminiResp.UsageMetadata.PromptTokenCount - cached
+		totalInput := geminiResp.UsageMetadata.PromptTokenCount
+		usage.InputTokens = totalInput - cached
 		usage.OutputTokens = geminiResp.UsageMetadata.CandidatesTokenCount
 		usage.CacheReadInputTokens = cached
+
+		// 缓存监控日志：记录缓存命中情况
+		if totalInput > 0 {
+			cacheHitRate := float64(cached) / float64(totalInput) * 100
+			log.Printf("[Antigravity Cache] model=%s total_input=%d cached=%d hit_rate=%.1f%%",
+				originalModel, totalInput, cached, cacheHitRate)
+		}
 	}
 
 	// 生成响应 ID

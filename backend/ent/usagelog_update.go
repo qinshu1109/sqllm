@@ -415,6 +415,20 @@ func (_u *UsageLogUpdate) AddRateMultiplier(v float64) *UsageLogUpdate {
 	return _u
 }
 
+// SetRateSource sets the "rate_source" field.
+func (_u *UsageLogUpdate) SetRateSource(v string) *UsageLogUpdate {
+	_u.mutation.SetRateSource(v)
+	return _u
+}
+
+// SetNillableRateSource sets the "rate_source" field if the given value is not nil.
+func (_u *UsageLogUpdate) SetNillableRateSource(v *string) *UsageLogUpdate {
+	if v != nil {
+		_u.SetRateSource(*v)
+	}
+	return _u
+}
+
 // SetBillingType sets the "billing_type" field.
 func (_u *UsageLogUpdate) SetBillingType(v int8) *UsageLogUpdate {
 	_u.mutation.ResetBillingType()
@@ -644,6 +658,11 @@ func (_u *UsageLogUpdate) check() error {
 			return &ValidationError{Name: "model", err: fmt.Errorf(`ent: validator failed for field "UsageLog.model": %w`, err)}
 		}
 	}
+	if v, ok := _u.mutation.RateSource(); ok {
+		if err := usagelog.RateSourceValidator(v); err != nil {
+			return &ValidationError{Name: "rate_source", err: fmt.Errorf(`ent: validator failed for field "UsageLog.rate_source": %w`, err)}
+		}
+	}
 	if v, ok := _u.mutation.ImageSize(); ok {
 		if err := usagelog.ImageSizeValidator(v); err != nil {
 			return &ValidationError{Name: "image_size", err: fmt.Errorf(`ent: validator failed for field "UsageLog.image_size": %w`, err)}
@@ -756,6 +775,9 @@ func (_u *UsageLogUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	}
 	if value, ok := _u.mutation.AddedRateMultiplier(); ok {
 		_spec.AddField(usagelog.FieldRateMultiplier, field.TypeFloat64, value)
+	}
+	if value, ok := _u.mutation.RateSource(); ok {
+		_spec.SetField(usagelog.FieldRateSource, field.TypeString, value)
 	}
 	if value, ok := _u.mutation.BillingType(); ok {
 		_spec.SetField(usagelog.FieldBillingType, field.TypeInt8, value)
@@ -1344,6 +1366,20 @@ func (_u *UsageLogUpdateOne) AddRateMultiplier(v float64) *UsageLogUpdateOne {
 	return _u
 }
 
+// SetRateSource sets the "rate_source" field.
+func (_u *UsageLogUpdateOne) SetRateSource(v string) *UsageLogUpdateOne {
+	_u.mutation.SetRateSource(v)
+	return _u
+}
+
+// SetNillableRateSource sets the "rate_source" field if the given value is not nil.
+func (_u *UsageLogUpdateOne) SetNillableRateSource(v *string) *UsageLogUpdateOne {
+	if v != nil {
+		_u.SetRateSource(*v)
+	}
+	return _u
+}
+
 // SetBillingType sets the "billing_type" field.
 func (_u *UsageLogUpdateOne) SetBillingType(v int8) *UsageLogUpdateOne {
 	_u.mutation.ResetBillingType()
@@ -1586,6 +1622,11 @@ func (_u *UsageLogUpdateOne) check() error {
 			return &ValidationError{Name: "model", err: fmt.Errorf(`ent: validator failed for field "UsageLog.model": %w`, err)}
 		}
 	}
+	if v, ok := _u.mutation.RateSource(); ok {
+		if err := usagelog.RateSourceValidator(v); err != nil {
+			return &ValidationError{Name: "rate_source", err: fmt.Errorf(`ent: validator failed for field "UsageLog.rate_source": %w`, err)}
+		}
+	}
 	if v, ok := _u.mutation.ImageSize(); ok {
 		if err := usagelog.ImageSizeValidator(v); err != nil {
 			return &ValidationError{Name: "image_size", err: fmt.Errorf(`ent: validator failed for field "UsageLog.image_size": %w`, err)}
@@ -1715,6 +1756,9 @@ func (_u *UsageLogUpdateOne) sqlSave(ctx context.Context) (_node *UsageLog, err 
 	}
 	if value, ok := _u.mutation.AddedRateMultiplier(); ok {
 		_spec.AddField(usagelog.FieldRateMultiplier, field.TypeFloat64, value)
+	}
+	if value, ok := _u.mutation.RateSource(); ok {
+		_spec.SetField(usagelog.FieldRateSource, field.TypeString, value)
 	}
 	if value, ok := _u.mutation.BillingType(); ok {
 		_spec.SetField(usagelog.FieldBillingType, field.TypeInt8, value)

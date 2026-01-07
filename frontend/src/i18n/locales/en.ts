@@ -386,6 +386,7 @@ export default {
     perRequest: 'per request',
     apiKeyFilter: 'API Key',
     allApiKeys: 'All API Keys',
+    allModels: 'All Models',
     timeRange: 'Time Range',
     exportCsv: 'Export CSV',
     exportExcel: 'Export Excel',
@@ -854,6 +855,13 @@ export default {
       imagePricing: {
         title: 'Image Generation Pricing',
         description: 'Configure pricing for gemini-3-pro-image model. Leave empty to use default prices.'
+      },
+      modelRates: {
+        title: 'Model Rate Configuration',
+        description: 'Set custom rate multipliers for specific models. Takes precedence over group default rate. Unconfigured models use group default.',
+        add: 'Add Model',
+        selectModel: 'Select model',
+        empty: 'No model rates configured. Group default rate will be used.'
       }
     },
 

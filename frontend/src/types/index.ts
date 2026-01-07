@@ -247,6 +247,16 @@ export type GroupPlatform = 'anthropic' | 'openai' | 'gemini' | 'antigravity'
 
 export type SubscriptionType = 'standard' | 'subscription'
 
+// 模型费率配置
+export interface GroupModelRate {
+  id?: number
+  group_id?: number
+  model: string
+  rate_multiplier: number
+  created_at?: string
+  updated_at?: string
+}
+
 export interface Group {
   id: number
   name: string
@@ -264,6 +274,8 @@ export interface Group {
   image_price_2k: number | null
   image_price_4k: number | null
   account_count?: number
+  // 模型费率配置
+  model_rates?: GroupModelRate[]
   created_at: string
   updated_at: string
 }
@@ -292,12 +304,27 @@ export interface UpdateApiKeyRequest {
   status?: 'active' | 'inactive'
 }
 
+// 模型费率配置输入（用于创建/更新分组）
+export interface GroupModelRateInput {
+  model: string
+  rate_multiplier: number
+}
+
 export interface CreateGroupRequest {
   name: string
   description?: string | null
   platform?: GroupPlatform
   rate_multiplier?: number
   is_exclusive?: boolean
+  subscription_type?: SubscriptionType
+  daily_limit_usd?: number | null
+  weekly_limit_usd?: number | null
+  monthly_limit_usd?: number | null
+  image_price_1k?: number | null
+  image_price_2k?: number | null
+  image_price_4k?: number | null
+  // 模型费率配置
+  model_rates?: GroupModelRateInput[]
 }
 
 export interface UpdateGroupRequest {
@@ -307,6 +334,15 @@ export interface UpdateGroupRequest {
   rate_multiplier?: number
   is_exclusive?: boolean
   status?: 'active' | 'inactive'
+  subscription_type?: SubscriptionType
+  daily_limit_usd?: number | null
+  weekly_limit_usd?: number | null
+  monthly_limit_usd?: number | null
+  image_price_1k?: number | null
+  image_price_2k?: number | null
+  image_price_4k?: number | null
+  // 模型费率配置（undefined 表示不更新，空数组表示清除所有）
+  model_rates?: GroupModelRateInput[]
 }
 
 // ==================== Account & Proxy Types ====================

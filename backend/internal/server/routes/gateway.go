@@ -31,6 +31,8 @@ func RegisterGatewayRoutes(
 		gateway.GET("/usage", h.Gateway.Usage)
 		// OpenAI Responses API
 		gateway.POST("/responses", h.OpenAIGateway.Responses)
+		// OpenAI Chat Completions API
+		gateway.POST("/chat/completions", h.ChatCompletions.ChatCompletions)
 	}
 
 	// Gemini 原生 API 兼容层（Gemini SDK/CLI 直连）
@@ -60,6 +62,8 @@ func RegisterGatewayRoutes(
 		antigravityV1.POST("/messages/count_tokens", h.Gateway.CountTokens)
 		antigravityV1.GET("/models", h.Gateway.AntigravityModels)
 		antigravityV1.GET("/usage", h.Gateway.Usage)
+		// OpenAI Chat Completions API
+		antigravityV1.POST("/chat/completions", h.ChatCompletions.ChatCompletions)
 	}
 
 	antigravityV1Beta := r.Group("/antigravity/v1beta")
