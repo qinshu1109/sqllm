@@ -10,6 +10,15 @@ export default {
     login: '登录',
     getStarted: '开始使用',
     goToDashboard: '进入控制台',
+    searchDocs: '搜索文档',
+    quickStart: '快速开始',
+    helpDocs: '帮助文档',
+    nav: {
+      home: '首页',
+      quickStart: '入门指南',
+      apiGuide: 'API 指南',
+      visitSite: '访问官网'
+    },
     tags: {
       subscriptionToApi: '订阅转 API',
       stickySession: '粘性会话',
@@ -35,6 +44,52 @@ export default {
     },
     footer: {
       allRightsReserved: '保留所有权利。'
+    }
+  },
+
+  // Docs Home Page
+  docs: {
+    searchPlaceholder: '搜索文档',
+    nav: {
+      home: '首页',
+      quickStart: '入门指南',
+      apiGuide: 'API 指南',
+      faq: 'FAQ',
+      visitSite: '访问官网'
+    },
+    hero: {
+      subtitle: '网关平台',
+      description: '轻松调用 ',
+      descriptionSuffix: ' 等主流 AI 模型',
+      quickStart: '快速开始',
+      apiDocs: 'API 文档',
+      visitSite: '访问官网'
+    },
+    features: {
+      easyToUse: {
+        title: '简单易用',
+        description: '创建 API Key 即可调用，兼容 OpenAI SDK，无需修改现有代码。'
+      },
+      multiModel: {
+        title: '多模型支持',
+        description: '支持 Claude、OpenAI、Gemini 等主流 AI 模型，一个平台访问所有。'
+      },
+      transparent: {
+        title: '用量透明',
+        description: '实时查看 Token 消耗和费用，清晰了解每次调用成本。'
+      },
+      flexible: {
+        title: '灵活充值',
+        description: '支持卡密充值，按需付费，无月费无最低消费。'
+      },
+      reliable: {
+        title: '稳定可靠',
+        description: '智能调度多账号，自动故障转移，保障服务高可用。'
+      },
+      secure: {
+        title: '安全保障',
+        description: 'API Key 隔离、速率限制、并发控制，保护您的账户安全。'
+      }
     }
   },
 
