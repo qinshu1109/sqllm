@@ -105,6 +105,18 @@ func GroupFromService(g *service.Group) *Group {
 			out.AccountGroups = append(out.AccountGroups, *AccountGroupFromService(&ag))
 		}
 	}
+	if len(g.ModelRates) > 0 {
+		out.ModelRates = make([]GroupModelRate, 0, len(g.ModelRates))
+		for _, mr := range g.ModelRates {
+			out.ModelRates = append(out.ModelRates, GroupModelRate{
+				ID:             mr.ID,
+				Model:          mr.Model,
+				RateMultiplier: mr.RateMultiplier,
+				CreatedAt:      mr.CreatedAt,
+				UpdatedAt:      mr.UpdatedAt,
+			})
+		}
+	}
 	return out
 }
 

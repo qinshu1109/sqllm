@@ -32,6 +32,42 @@ const routes: RouteRecordRaw[] = [
     }
   },
   {
+    path: '/docs',
+    name: 'Docs',
+    component: () => import('@/views/DocsHomeView.vue'),
+    meta: {
+      requiresAuth: false,
+      title: 'Documentation'
+    }
+  },
+  {
+    path: '/docs/api/claude',
+    name: 'DocsClaudeApi',
+    component: () => import('@/views/docs/ClaudeApiDoc.vue'),
+    meta: {
+      requiresAuth: false,
+      title: 'Claude API - Documentation'
+    }
+  },
+  {
+    path: '/docs/api/gemini',
+    name: 'DocsGeminiApi',
+    component: () => import('@/views/docs/GeminiApiDoc.vue'),
+    meta: {
+      requiresAuth: false,
+      title: 'Gemini API - Documentation'
+    }
+  },
+  {
+    path: '/docs/api/openai',
+    name: 'DocsOpenAIApi',
+    component: () => import('@/views/docs/OpenAIApiDoc.vue'),
+    meta: {
+      requiresAuth: false,
+      title: 'OpenAI API - Documentation'
+    }
+  },
+  {
     path: '/login',
     name: 'Login',
     component: () => import('@/views/auth/LoginView.vue'),

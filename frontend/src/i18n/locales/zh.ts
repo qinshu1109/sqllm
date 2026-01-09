@@ -10,6 +10,15 @@ export default {
     login: '登录',
     getStarted: '开始使用',
     goToDashboard: '进入控制台',
+    searchDocs: '搜索文档',
+    quickStart: '快速开始',
+    helpDocs: '帮助文档',
+    nav: {
+      home: '首页',
+      quickStart: '入门指南',
+      apiGuide: 'API 指南',
+      visitSite: '访问官网'
+    },
     tags: {
       subscriptionToApi: '订阅转 API',
       stickySession: '粘性会话',
@@ -35,6 +44,52 @@ export default {
     },
     footer: {
       allRightsReserved: '保留所有权利。'
+    }
+  },
+
+  // Docs Home Page
+  docs: {
+    searchPlaceholder: '搜索文档',
+    nav: {
+      home: '首页',
+      quickStart: '入门指南',
+      apiGuide: 'API 指南',
+      faq: 'FAQ',
+      visitSite: '访问官网'
+    },
+    hero: {
+      subtitle: '网关平台',
+      description: '轻松调用 ',
+      descriptionSuffix: ' 等主流 AI 模型',
+      quickStart: '快速开始',
+      apiDocs: 'API 文档',
+      visitSite: '访问官网'
+    },
+    features: {
+      easyToUse: {
+        title: '简单易用',
+        description: '创建 API Key 即可调用，兼容 OpenAI SDK，无需修改现有代码。'
+      },
+      multiModel: {
+        title: '多模型支持',
+        description: '支持 Claude、OpenAI、Gemini 等主流 AI 模型，一个平台访问所有。'
+      },
+      transparent: {
+        title: '用量透明',
+        description: '实时查看 Token 消耗和费用，清晰了解每次调用成本。'
+      },
+      flexible: {
+        title: '灵活充值',
+        description: '支持卡密充值，按需付费，无月费无最低消费。'
+      },
+      reliable: {
+        title: '稳定可靠',
+        description: '智能调度多账号，自动故障转移，保障服务高可用。'
+      },
+      secure: {
+        title: '安全保障',
+        description: 'API Key 隔离、速率限制、并发控制，保护您的账户安全。'
+      }
     }
   },
 
@@ -385,6 +440,7 @@ export default {
     perRequest: '每次请求',
     apiKeyFilter: 'API 密钥',
     allApiKeys: '全部密钥',
+    allModels: '全部模型',
     timeRange: '时间范围',
     exportCsv: '导出 CSV',
     exportExcel: '导出 Excel',
@@ -943,6 +999,13 @@ export default {
         fallbackGroup: '降级分组',
         fallbackHint: '非 Claude Code 请求将使用此分组，留空则直接拒绝',
         noFallback: '不降级（直接拒绝）'
+      },
+      modelRates: {
+        title: '模型费率配置',
+        description: '为特定模型设置独立费率倍数，优先于分组默认费率。未配置的模型使用分组默认费率。',
+        add: '添加模型',
+        selectModel: '选择模型',
+        empty: '暂未配置模型费率，将使用分组默认费率'
       }
     },
 
@@ -2146,7 +2209,7 @@ export default {
       },
       accountPriority: {
         title: '⚖️ 4. 优先级（可选）',
-        description: '<div style="line-height: 1.7;"><p style="margin-bottom: 12px;">设置账号的调用优先级。</p><div style="padding: 8px 12px; background: #eff6ff; border-left: 3px solid #3b82f6; border-radius: 4px; font-size: 13px; margin-bottom: 12px;"><b>📊 优先级规则：</b><ul style="margin: 8px 0 0 16px;"><li>数字越小，优先级越高</li><li>系统优先使用低数值账号</li><li>相同优先级则随机选择</li></ul></div><p style="padding: 8px 12px; background: #f0fdf4; border-left: 3px solid #10b981; border-radius: 4px; font-size: 13px;"><b>💡 使用场景：</b>主账号设置低数值，备用账号设置高数值</p></div>',
+        description: '<div style="line-height: 1.7;"><p style="margin-bottom: 12px;">设置账号的调用优先级。</p><div style="padding: 8px 12px; background: #eff6ff; border-left: 3px solid #3b82f6; border-radius: 4px; font-size: 13px; margin-bottom: 12px;"><b>📊 优先级规则：</b><ul style="margin: 8px 0 0 16px;"><li>数字越大，优先级越高</li><li>系统优先使用高优先级账号</li><li>相同优先级则随机选择</li></ul></div><p style="padding: 8px 12px; background: #f0fdf4; border-left: 3px solid #10b981; border-radius: 4px; font-size: 13px;"><b>💡 使用场景：</b>主账号设置高优先级，备用账号设置低优先级</p></div>',
         nextBtn: '下一步'
       },
       accountGroups: {

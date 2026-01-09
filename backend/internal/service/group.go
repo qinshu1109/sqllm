@@ -2,6 +2,16 @@ package service
 
 import "time"
 
+// GroupModelRate represents per-model rate configuration within a group
+type GroupModelRate struct {
+	ID             int64
+	GroupID        int64
+	Model          string
+	RateMultiplier float64
+	CreatedAt      time.Time
+	UpdatedAt      time.Time
+}
+
 type Group struct {
 	ID             int64
 	Name           string
@@ -31,6 +41,9 @@ type Group struct {
 
 	AccountGroups []AccountGroup
 	AccountCount  int64
+
+	// 模型专属费率配置
+	ModelRates []GroupModelRate
 }
 
 func (g *Group) IsActive() bool {

@@ -155,6 +155,11 @@ func RateMultiplier(v float64) predicate.UsageLog {
 	return predicate.UsageLog(sql.FieldEQ(FieldRateMultiplier, v))
 }
 
+// RateSource applies equality check predicate on the "rate_source" field. It's identical to RateSourceEQ.
+func RateSource(v string) predicate.UsageLog {
+	return predicate.UsageLog(sql.FieldEQ(FieldRateSource, v))
+}
+
 // BillingType applies equality check predicate on the "billing_type" field. It's identical to BillingTypeEQ.
 func BillingType(v int8) predicate.UsageLog {
 	return predicate.UsageLog(sql.FieldEQ(FieldBillingType, v))
@@ -963,6 +968,81 @@ func RateMultiplierLT(v float64) predicate.UsageLog {
 // RateMultiplierLTE applies the LTE predicate on the "rate_multiplier" field.
 func RateMultiplierLTE(v float64) predicate.UsageLog {
 	return predicate.UsageLog(sql.FieldLTE(FieldRateMultiplier, v))
+}
+
+// RateSourceEQ applies the EQ predicate on the "rate_source" field.
+func RateSourceEQ(v string) predicate.UsageLog {
+	return predicate.UsageLog(sql.FieldEQ(FieldRateSource, v))
+}
+
+// RateSourceNEQ applies the NEQ predicate on the "rate_source" field.
+func RateSourceNEQ(v string) predicate.UsageLog {
+	return predicate.UsageLog(sql.FieldNEQ(FieldRateSource, v))
+}
+
+// RateSourceIn applies the In predicate on the "rate_source" field.
+func RateSourceIn(vs ...string) predicate.UsageLog {
+	return predicate.UsageLog(sql.FieldIn(FieldRateSource, vs...))
+}
+
+// RateSourceNotIn applies the NotIn predicate on the "rate_source" field.
+func RateSourceNotIn(vs ...string) predicate.UsageLog {
+	return predicate.UsageLog(sql.FieldNotIn(FieldRateSource, vs...))
+}
+
+// RateSourceGT applies the GT predicate on the "rate_source" field.
+func RateSourceGT(v string) predicate.UsageLog {
+	return predicate.UsageLog(sql.FieldGT(FieldRateSource, v))
+}
+
+// RateSourceGTE applies the GTE predicate on the "rate_source" field.
+func RateSourceGTE(v string) predicate.UsageLog {
+	return predicate.UsageLog(sql.FieldGTE(FieldRateSource, v))
+}
+
+// RateSourceLT applies the LT predicate on the "rate_source" field.
+func RateSourceLT(v string) predicate.UsageLog {
+	return predicate.UsageLog(sql.FieldLT(FieldRateSource, v))
+}
+
+// RateSourceLTE applies the LTE predicate on the "rate_source" field.
+func RateSourceLTE(v string) predicate.UsageLog {
+	return predicate.UsageLog(sql.FieldLTE(FieldRateSource, v))
+}
+
+// RateSourceContains applies the Contains predicate on the "rate_source" field.
+func RateSourceContains(v string) predicate.UsageLog {
+	return predicate.UsageLog(sql.FieldContains(FieldRateSource, v))
+}
+
+// RateSourceHasPrefix applies the HasPrefix predicate on the "rate_source" field.
+func RateSourceHasPrefix(v string) predicate.UsageLog {
+	return predicate.UsageLog(sql.FieldHasPrefix(FieldRateSource, v))
+}
+
+// RateSourceHasSuffix applies the HasSuffix predicate on the "rate_source" field.
+func RateSourceHasSuffix(v string) predicate.UsageLog {
+	return predicate.UsageLog(sql.FieldHasSuffix(FieldRateSource, v))
+}
+
+// RateSourceIsNil applies the IsNil predicate on the "rate_source" field.
+func RateSourceIsNil() predicate.UsageLog {
+	return predicate.UsageLog(sql.FieldIsNull(FieldRateSource))
+}
+
+// RateSourceNotNil applies the NotNil predicate on the "rate_source" field.
+func RateSourceNotNil() predicate.UsageLog {
+	return predicate.UsageLog(sql.FieldNotNull(FieldRateSource))
+}
+
+// RateSourceEqualFold applies the EqualFold predicate on the "rate_source" field.
+func RateSourceEqualFold(v string) predicate.UsageLog {
+	return predicate.UsageLog(sql.FieldEqualFold(FieldRateSource, v))
+}
+
+// RateSourceContainsFold applies the ContainsFold predicate on the "rate_source" field.
+func RateSourceContainsFold(v string) predicate.UsageLog {
+	return predicate.UsageLog(sql.FieldContainsFold(FieldRateSource, v))
 }
 
 // BillingTypeEQ applies the EQ predicate on the "billing_type" field.

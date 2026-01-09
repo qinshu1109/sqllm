@@ -10,6 +10,15 @@ export default {
     login: 'Login',
     getStarted: 'Get Started',
     goToDashboard: 'Go to Dashboard',
+    searchDocs: 'Search docs',
+    quickStart: 'Quick Start',
+    helpDocs: 'Help Docs',
+    nav: {
+      home: 'Home',
+      quickStart: 'Quick Start',
+      apiGuide: 'API Guide',
+      visitSite: 'Visit Site'
+    },
     tags: {
       subscriptionToApi: 'Subscription to API',
       stickySession: 'Sticky Session',
@@ -38,6 +47,52 @@ export default {
     },
     footer: {
       allRightsReserved: 'All rights reserved.'
+    }
+  },
+
+  // Docs Home Page
+  docs: {
+    searchPlaceholder: 'Search docs',
+    nav: {
+      home: 'Home',
+      quickStart: 'Quick Start',
+      apiGuide: 'API Guide',
+      faq: 'FAQ',
+      visitSite: 'Visit Site'
+    },
+    hero: {
+      subtitle: 'Gateway Platform',
+      description: 'Easily access ',
+      descriptionSuffix: ' and other mainstream AI models',
+      quickStart: 'Quick Start',
+      apiDocs: 'API Docs',
+      visitSite: 'Visit Site'
+    },
+    features: {
+      easyToUse: {
+        title: 'Easy to Use',
+        description: 'Create an API Key to get started. Compatible with OpenAI SDK, no code changes needed.'
+      },
+      multiModel: {
+        title: 'Multi-Model Support',
+        description: 'Support Claude, OpenAI, Gemini and more. Access all models from one platform.'
+      },
+      transparent: {
+        title: 'Transparent Usage',
+        description: 'Real-time token consumption and cost tracking. Know the cost of every API call.'
+      },
+      flexible: {
+        title: 'Flexible Billing',
+        description: 'Pay as you go with redeem codes. No monthly fees, no minimum spending.'
+      },
+      reliable: {
+        title: 'Reliable Service',
+        description: 'Smart multi-account routing with automatic failover. High availability guaranteed.'
+      },
+      secure: {
+        title: 'Security First',
+        description: 'API Key isolation, rate limiting, concurrency control. Keep your account safe.'
+      }
     }
   },
 
@@ -388,6 +443,7 @@ export default {
     perRequest: 'per request',
     apiKeyFilter: 'API Key',
     allApiKeys: 'All API Keys',
+    allModels: 'All Models',
     timeRange: 'Time Range',
     exportCsv: 'Export CSV',
     exportExcel: 'Export Excel',
@@ -866,6 +922,13 @@ export default {
         fallbackGroup: 'Fallback Group',
         fallbackHint: 'Non-Claude Code requests will use this group. Leave empty to reject directly.',
         noFallback: 'No Fallback (Reject)'
+      },
+      modelRates: {
+        title: 'Model Rate Configuration',
+        description: 'Set custom rate multipliers for specific models. Takes precedence over group default rate. Unconfigured models use group default.',
+        add: 'Add Model',
+        selectModel: 'Select model',
+        empty: 'No model rates configured. Group default rate will be used.'
       }
     },
 
@@ -2004,7 +2067,7 @@ export default {
       },
       accountPriority: {
         title: '⚖️ 4. Priority (Optional)',
-        description: '<div style="line-height: 1.7;"><p style="margin-bottom: 12px;">Set the account call priority.</p><div style="padding: 8px 12px; background: #eff6ff; border-left: 3px solid #3b82f6; border-radius: 4px; font-size: 13px; margin-bottom: 12px;"><b>📊 Priority Rules:</b><ul style="margin: 8px 0 0 16px;"><li>Lower number = higher priority</li><li>System uses low-value accounts first</li><li>Same priority = random selection</li></ul></div><p style="padding: 8px 12px; background: #f0fdf4; border-left: 3px solid #10b981; border-radius: 4px; font-size: 13px;"><b>💡 Use Case:</b> Set main account to lower value, backup accounts to higher value</p></div>',
+        description: '<div style="line-height: 1.7;"><p style="margin-bottom: 12px;">Set the account call priority.</p><div style="padding: 8px 12px; background: #eff6ff; border-left: 3px solid #3b82f6; border-radius: 4px; font-size: 13px; margin-bottom: 12px;"><b>📊 Priority Rules:</b><ul style="margin: 8px 0 0 16px;"><li>Higher number = higher priority</li><li>System uses high-priority accounts first</li><li>Same priority = random selection</li></ul></div><p style="padding: 8px 12px; background: #f0fdf4; border-left: 3px solid #10b981; border-radius: 4px; font-size: 13px;"><b>💡 Use Case:</b> Set main account to high priority, backup accounts to low priority</p></div>',
         nextBtn: 'Next'
       },
       accountGroups: {

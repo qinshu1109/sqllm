@@ -54,6 +54,8 @@ const (
 	FieldActualCost = "actual_cost"
 	// FieldRateMultiplier holds the string denoting the rate_multiplier field in the database.
 	FieldRateMultiplier = "rate_multiplier"
+	// FieldRateSource holds the string denoting the rate_source field in the database.
+	FieldRateSource = "rate_source"
 	// FieldBillingType holds the string denoting the billing_type field in the database.
 	FieldBillingType = "billing_type"
 	// FieldStream holds the string denoting the stream field in the database.
@@ -142,6 +144,7 @@ var Columns = []string{
 	FieldTotalCost,
 	FieldActualCost,
 	FieldRateMultiplier,
+	FieldRateSource,
 	FieldBillingType,
 	FieldStream,
 	FieldDurationMs,
@@ -193,6 +196,10 @@ var (
 	DefaultActualCost float64
 	// DefaultRateMultiplier holds the default value on creation for the "rate_multiplier" field.
 	DefaultRateMultiplier float64
+	// DefaultRateSource holds the default value on creation for the "rate_source" field.
+	DefaultRateSource string
+	// RateSourceValidator is a validator for the "rate_source" field. It is called by the builders before save.
+	RateSourceValidator func(string) error
 	// DefaultBillingType holds the default value on creation for the "billing_type" field.
 	DefaultBillingType int8
 	// DefaultStream holds the default value on creation for the "stream" field.
@@ -313,6 +320,11 @@ func ByActualCost(opts ...sql.OrderTermOption) OrderOption {
 // ByRateMultiplier orders the results by the rate_multiplier field.
 func ByRateMultiplier(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldRateMultiplier, opts...).ToFunc()
+}
+
+// ByRateSource orders the results by the rate_source field.
+func ByRateSource(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldRateSource, opts...).ToFunc()
 }
 
 // ByBillingType orders the results by the billing_type field.
