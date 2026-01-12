@@ -150,6 +150,16 @@ func FallbackGroupID(v int64) predicate.Group {
 	return predicate.Group(sql.FieldEQ(FieldFallbackGroupID, v))
 }
 
+// BillingMode applies equality check predicate on the "billing_mode" field. It's identical to BillingModeEQ.
+func BillingMode(v string) predicate.Group {
+	return predicate.Group(sql.FieldEQ(FieldBillingMode, v))
+}
+
+// DefaultCardPrice applies equality check predicate on the "default_card_price" field. It's identical to DefaultCardPriceEQ.
+func DefaultCardPrice(v float64) predicate.Group {
+	return predicate.Group(sql.FieldEQ(FieldDefaultCardPrice, v))
+}
+
 // CreatedAtEQ applies the EQ predicate on the "created_at" field.
 func CreatedAtEQ(v time.Time) predicate.Group {
 	return predicate.Group(sql.FieldEQ(FieldCreatedAt, v))
@@ -1065,6 +1075,121 @@ func FallbackGroupIDNotNil() predicate.Group {
 	return predicate.Group(sql.FieldNotNull(FieldFallbackGroupID))
 }
 
+// BillingModeEQ applies the EQ predicate on the "billing_mode" field.
+func BillingModeEQ(v string) predicate.Group {
+	return predicate.Group(sql.FieldEQ(FieldBillingMode, v))
+}
+
+// BillingModeNEQ applies the NEQ predicate on the "billing_mode" field.
+func BillingModeNEQ(v string) predicate.Group {
+	return predicate.Group(sql.FieldNEQ(FieldBillingMode, v))
+}
+
+// BillingModeIn applies the In predicate on the "billing_mode" field.
+func BillingModeIn(vs ...string) predicate.Group {
+	return predicate.Group(sql.FieldIn(FieldBillingMode, vs...))
+}
+
+// BillingModeNotIn applies the NotIn predicate on the "billing_mode" field.
+func BillingModeNotIn(vs ...string) predicate.Group {
+	return predicate.Group(sql.FieldNotIn(FieldBillingMode, vs...))
+}
+
+// BillingModeGT applies the GT predicate on the "billing_mode" field.
+func BillingModeGT(v string) predicate.Group {
+	return predicate.Group(sql.FieldGT(FieldBillingMode, v))
+}
+
+// BillingModeGTE applies the GTE predicate on the "billing_mode" field.
+func BillingModeGTE(v string) predicate.Group {
+	return predicate.Group(sql.FieldGTE(FieldBillingMode, v))
+}
+
+// BillingModeLT applies the LT predicate on the "billing_mode" field.
+func BillingModeLT(v string) predicate.Group {
+	return predicate.Group(sql.FieldLT(FieldBillingMode, v))
+}
+
+// BillingModeLTE applies the LTE predicate on the "billing_mode" field.
+func BillingModeLTE(v string) predicate.Group {
+	return predicate.Group(sql.FieldLTE(FieldBillingMode, v))
+}
+
+// BillingModeContains applies the Contains predicate on the "billing_mode" field.
+func BillingModeContains(v string) predicate.Group {
+	return predicate.Group(sql.FieldContains(FieldBillingMode, v))
+}
+
+// BillingModeHasPrefix applies the HasPrefix predicate on the "billing_mode" field.
+func BillingModeHasPrefix(v string) predicate.Group {
+	return predicate.Group(sql.FieldHasPrefix(FieldBillingMode, v))
+}
+
+// BillingModeHasSuffix applies the HasSuffix predicate on the "billing_mode" field.
+func BillingModeHasSuffix(v string) predicate.Group {
+	return predicate.Group(sql.FieldHasSuffix(FieldBillingMode, v))
+}
+
+// BillingModeEqualFold applies the EqualFold predicate on the "billing_mode" field.
+func BillingModeEqualFold(v string) predicate.Group {
+	return predicate.Group(sql.FieldEqualFold(FieldBillingMode, v))
+}
+
+// BillingModeContainsFold applies the ContainsFold predicate on the "billing_mode" field.
+func BillingModeContainsFold(v string) predicate.Group {
+	return predicate.Group(sql.FieldContainsFold(FieldBillingMode, v))
+}
+
+// DefaultCardPriceEQ applies the EQ predicate on the "default_card_price" field.
+func DefaultCardPriceEQ(v float64) predicate.Group {
+	return predicate.Group(sql.FieldEQ(FieldDefaultCardPrice, v))
+}
+
+// DefaultCardPriceNEQ applies the NEQ predicate on the "default_card_price" field.
+func DefaultCardPriceNEQ(v float64) predicate.Group {
+	return predicate.Group(sql.FieldNEQ(FieldDefaultCardPrice, v))
+}
+
+// DefaultCardPriceIn applies the In predicate on the "default_card_price" field.
+func DefaultCardPriceIn(vs ...float64) predicate.Group {
+	return predicate.Group(sql.FieldIn(FieldDefaultCardPrice, vs...))
+}
+
+// DefaultCardPriceNotIn applies the NotIn predicate on the "default_card_price" field.
+func DefaultCardPriceNotIn(vs ...float64) predicate.Group {
+	return predicate.Group(sql.FieldNotIn(FieldDefaultCardPrice, vs...))
+}
+
+// DefaultCardPriceGT applies the GT predicate on the "default_card_price" field.
+func DefaultCardPriceGT(v float64) predicate.Group {
+	return predicate.Group(sql.FieldGT(FieldDefaultCardPrice, v))
+}
+
+// DefaultCardPriceGTE applies the GTE predicate on the "default_card_price" field.
+func DefaultCardPriceGTE(v float64) predicate.Group {
+	return predicate.Group(sql.FieldGTE(FieldDefaultCardPrice, v))
+}
+
+// DefaultCardPriceLT applies the LT predicate on the "default_card_price" field.
+func DefaultCardPriceLT(v float64) predicate.Group {
+	return predicate.Group(sql.FieldLT(FieldDefaultCardPrice, v))
+}
+
+// DefaultCardPriceLTE applies the LTE predicate on the "default_card_price" field.
+func DefaultCardPriceLTE(v float64) predicate.Group {
+	return predicate.Group(sql.FieldLTE(FieldDefaultCardPrice, v))
+}
+
+// DefaultCardPriceIsNil applies the IsNil predicate on the "default_card_price" field.
+func DefaultCardPriceIsNil() predicate.Group {
+	return predicate.Group(sql.FieldIsNull(FieldDefaultCardPrice))
+}
+
+// DefaultCardPriceNotNil applies the NotNil predicate on the "default_card_price" field.
+func DefaultCardPriceNotNil() predicate.Group {
+	return predicate.Group(sql.FieldNotNull(FieldDefaultCardPrice))
+}
+
 // HasAPIKeys applies the HasEdge predicate on the "api_keys" edge.
 func HasAPIKeys() predicate.Group {
 	return predicate.Group(func(s *sql.Selector) {
@@ -1149,6 +1274,29 @@ func HasUsageLogs() predicate.Group {
 func HasUsageLogsWith(preds ...predicate.UsageLog) predicate.Group {
 	return predicate.Group(func(s *sql.Selector) {
 		step := newUsageLogsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasModelRates applies the HasEdge predicate on the "model_rates" edge.
+func HasModelRates() predicate.Group {
+	return predicate.Group(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, ModelRatesTable, ModelRatesColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasModelRatesWith applies the HasEdge predicate on the "model_rates" edge with a given conditions (other predicates).
+func HasModelRatesWith(preds ...predicate.GroupModelRate) predicate.Group {
+	return predicate.Group(func(s *sql.Selector) {
+		step := newModelRatesStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

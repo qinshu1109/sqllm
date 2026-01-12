@@ -752,6 +752,42 @@ func (r *accountRepository) ClearRateLimit(ctx context.Context, id int64) error 
 	return err
 }
 
+// BulkClearRateLimit 批量清除账号的限流状态
+// 如果 ids 为空，则清除所有账号的限流状态
+func (r *accountRepository) BulkClearRateLimit(ctx context.Context, ids []int64) (int64, error) {
+	query := `
+		UPDATE accounts
+		SET rate_limited_at = NULL,
+			rate_limit_reset_at = NULL,
+			overload_until = NULL,
+			temp_unschedulable_until = NULL,
+			temp_unschedulable_reason = NULL,
+			updated_at = NOW()
+		WHERE deleted_at IS NULL
+			AND (rate_limited_at IS NOT NULL
+				OR rate_limit_reset_at IS NOT NULL
+				OR overload_until IS NOT NULL
+				OR temp_unschedulable_until IS NOT NULL)
+	`
+	args := []any{}
+
+	if len(ids) > 0 {
+		query += " AND id = ANY($1)"
+		args = append(args, ids)
+	}
+
+	result, err := r.sql.ExecContext(ctx, query, args...)
+	if err != nil {
+		return 0, err
+	}
+
+	affected, err := result.RowsAffected()
+	if err != nil {
+		return 0, err
+	}
+	return affected, nil
+}
+
 func (r *accountRepository) ClearAntigravityQuotaScopes(ctx context.Context, id int64) error {
 	client := clientFromContext(ctx, r.client)
 	result, err := client.ExecContext(

@@ -281,6 +281,20 @@ func (_c *UsageLogCreate) SetNillableBillingType(v *int8) *UsageLogCreate {
 	return _c
 }
 
+// SetIsCardBilling sets the "is_card_billing" field.
+func (_c *UsageLogCreate) SetIsCardBilling(v bool) *UsageLogCreate {
+	_c.mutation.SetIsCardBilling(v)
+	return _c
+}
+
+// SetNillableIsCardBilling sets the "is_card_billing" field if the given value is not nil.
+func (_c *UsageLogCreate) SetNillableIsCardBilling(v *bool) *UsageLogCreate {
+	if v != nil {
+		_c.SetIsCardBilling(*v)
+	}
+	return _c
+}
+
 // SetStream sets the "stream" field.
 func (_c *UsageLogCreate) SetStream(v bool) *UsageLogCreate {
 	_c.mutation.SetStream(v)
@@ -509,6 +523,10 @@ func (_c *UsageLogCreate) defaults() {
 		v := usagelog.DefaultBillingType
 		_c.mutation.SetBillingType(v)
 	}
+	if _, ok := _c.mutation.IsCardBilling(); !ok {
+		v := usagelog.DefaultIsCardBilling
+		_c.mutation.SetIsCardBilling(v)
+	}
 	if _, ok := _c.mutation.Stream(); !ok {
 		v := usagelog.DefaultStream
 		_c.mutation.SetStream(v)
@@ -591,6 +609,9 @@ func (_c *UsageLogCreate) check() error {
 	}
 	if _, ok := _c.mutation.BillingType(); !ok {
 		return &ValidationError{Name: "billing_type", err: errors.New(`ent: missing required field "UsageLog.billing_type"`)}
+	}
+	if _, ok := _c.mutation.IsCardBilling(); !ok {
+		return &ValidationError{Name: "is_card_billing", err: errors.New(`ent: missing required field "UsageLog.is_card_billing"`)}
 	}
 	if _, ok := _c.mutation.Stream(); !ok {
 		return &ValidationError{Name: "stream", err: errors.New(`ent: missing required field "UsageLog.stream"`)}
@@ -715,6 +736,10 @@ func (_c *UsageLogCreate) createSpec() (*UsageLog, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.BillingType(); ok {
 		_spec.SetField(usagelog.FieldBillingType, field.TypeInt8, value)
 		_node.BillingType = value
+	}
+	if value, ok := _c.mutation.IsCardBilling(); ok {
+		_spec.SetField(usagelog.FieldIsCardBilling, field.TypeBool, value)
+		_node.IsCardBilling = value
 	}
 	if value, ok := _c.mutation.Stream(); ok {
 		_spec.SetField(usagelog.FieldStream, field.TypeBool, value)
@@ -1230,6 +1255,18 @@ func (u *UsageLogUpsert) UpdateBillingType() *UsageLogUpsert {
 // AddBillingType adds v to the "billing_type" field.
 func (u *UsageLogUpsert) AddBillingType(v int8) *UsageLogUpsert {
 	u.Add(usagelog.FieldBillingType, v)
+	return u
+}
+
+// SetIsCardBilling sets the "is_card_billing" field.
+func (u *UsageLogUpsert) SetIsCardBilling(v bool) *UsageLogUpsert {
+	u.Set(usagelog.FieldIsCardBilling, v)
+	return u
+}
+
+// UpdateIsCardBilling sets the "is_card_billing" field to the value that was provided on create.
+func (u *UsageLogUpsert) UpdateIsCardBilling() *UsageLogUpsert {
+	u.SetExcluded(usagelog.FieldIsCardBilling)
 	return u
 }
 
@@ -1813,6 +1850,20 @@ func (u *UsageLogUpsertOne) AddBillingType(v int8) *UsageLogUpsertOne {
 func (u *UsageLogUpsertOne) UpdateBillingType() *UsageLogUpsertOne {
 	return u.Update(func(s *UsageLogUpsert) {
 		s.UpdateBillingType()
+	})
+}
+
+// SetIsCardBilling sets the "is_card_billing" field.
+func (u *UsageLogUpsertOne) SetIsCardBilling(v bool) *UsageLogUpsertOne {
+	return u.Update(func(s *UsageLogUpsert) {
+		s.SetIsCardBilling(v)
+	})
+}
+
+// UpdateIsCardBilling sets the "is_card_billing" field to the value that was provided on create.
+func (u *UsageLogUpsertOne) UpdateIsCardBilling() *UsageLogUpsertOne {
+	return u.Update(func(s *UsageLogUpsert) {
+		s.UpdateIsCardBilling()
 	})
 }
 
@@ -2584,6 +2635,20 @@ func (u *UsageLogUpsertBulk) AddBillingType(v int8) *UsageLogUpsertBulk {
 func (u *UsageLogUpsertBulk) UpdateBillingType() *UsageLogUpsertBulk {
 	return u.Update(func(s *UsageLogUpsert) {
 		s.UpdateBillingType()
+	})
+}
+
+// SetIsCardBilling sets the "is_card_billing" field.
+func (u *UsageLogUpsertBulk) SetIsCardBilling(v bool) *UsageLogUpsertBulk {
+	return u.Update(func(s *UsageLogUpsert) {
+		s.SetIsCardBilling(v)
+	})
+}
+
+// UpdateIsCardBilling sets the "is_card_billing" field to the value that was provided on create.
+func (u *UsageLogUpsertBulk) UpdateIsCardBilling() *UsageLogUpsertBulk {
+	return u.Update(func(s *UsageLogUpsert) {
+		s.UpdateIsCardBilling()
 	})
 }
 

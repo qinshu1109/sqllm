@@ -10,6 +10,15 @@ export default {
     login: 'Login',
     getStarted: 'Get Started',
     goToDashboard: 'Go to Dashboard',
+    searchDocs: 'Search docs',
+    quickStart: 'Quick Start',
+    helpDocs: 'Help Docs',
+    nav: {
+      home: 'Home',
+      quickStart: 'Quick Start',
+      apiGuide: 'API Guide',
+      visitSite: 'Visit Site'
+    },
     tags: {
       subscriptionToApi: 'Subscription to API',
       stickySession: 'Sticky Session',
@@ -38,6 +47,52 @@ export default {
     },
     footer: {
       allRightsReserved: 'All rights reserved.'
+    }
+  },
+
+  // Docs Home Page
+  docs: {
+    searchPlaceholder: 'Search docs',
+    nav: {
+      home: 'Home',
+      quickStart: 'Quick Start',
+      apiGuide: 'API Guide',
+      faq: 'FAQ',
+      visitSite: 'Visit Site'
+    },
+    hero: {
+      subtitle: 'Gateway Platform',
+      description: 'Easily access ',
+      descriptionSuffix: ' and other mainstream AI models',
+      quickStart: 'Quick Start',
+      apiDocs: 'API Docs',
+      visitSite: 'Visit Site'
+    },
+    features: {
+      easyToUse: {
+        title: 'Easy to Use',
+        description: 'Create an API Key to get started. Compatible with OpenAI SDK, no code changes needed.'
+      },
+      multiModel: {
+        title: 'Multi-Model Support',
+        description: 'Support Claude, OpenAI, Gemini and more. Access all models from one platform.'
+      },
+      transparent: {
+        title: 'Transparent Usage',
+        description: 'Real-time token consumption and cost tracking. Know the cost of every API call.'
+      },
+      flexible: {
+        title: 'Flexible Billing',
+        description: 'Pay as you go with redeem codes. No monthly fees, no minimum spending.'
+      },
+      reliable: {
+        title: 'Reliable Service',
+        description: 'Smart multi-account routing with automatic failover. High availability guaranteed.'
+      },
+      secure: {
+        title: 'Security First',
+        description: 'API Key isolation, rate limiting, concurrency control. Keep your account safe.'
+      }
     }
   },
 
@@ -364,12 +419,6 @@ export default {
         note: 'Make sure the config directory exists. macOS/Linux users can run mkdir -p ~/.codex to create it.',
         noteWindows: 'Press Win+R and enter %userprofile%\\.codex to open the config directory. Create it manually if it does not exist.',
       },
-      cliTabs: {
-        claudeCode: 'Claude Code',
-        geminiCli: 'Gemini CLI',
-        codexCli: 'Codex CLI',
-        opencode: 'OpenCode',
-      },
       antigravity: {
         description: 'Configure API access for Antigravity group. Select the configuration method based on your client.',
         claudeCode: 'Claude Code',
@@ -381,11 +430,6 @@ export default {
         description: 'Add the following environment variables to your terminal profile or run directly in terminal to configure Gemini CLI access.',
         modelComment: 'If you have Gemini 3 access, you can use: gemini-3-pro-preview',
         note: 'These environment variables will be active in the current terminal session. For permanent configuration, add them to ~/.bashrc, ~/.zshrc, or the appropriate configuration file.',
-      },
-      opencode: {
-        title: 'OpenCode Example',
-        subtitle: 'opencode.json',
-        hint: 'This is a group configuration example. Adjust model and options as needed.',
       },
     },
     customKeyLabel: 'Custom Key',
@@ -429,6 +473,7 @@ export default {
     perRequest: 'per request',
     apiKeyFilter: 'API Key',
     allApiKeys: 'All API Keys',
+    allModels: 'All Models',
     timeRange: 'Time Range',
     exportCsv: 'Export CSV',
     exportExcel: 'Export Excel',
@@ -904,6 +949,27 @@ export default {
         fallbackGroup: 'Fallback Group',
         fallbackHint: 'Non-Claude Code requests will use this group. Leave empty to reject directly.',
         noFallback: 'No Fallback (Reject)'
+      },
+      modelRates: {
+        title: 'Model Rate Configuration',
+        description: 'Set custom rate multipliers for specific models. Takes precedence over group default rate. Unconfigured models use group default.',
+        add: 'Add Model',
+        selectModel: 'Select model',
+        empty: 'No model rates configured. Group default rate will be used.',
+        rateMultiplierTitle: 'Rate Multiplier',
+        cardPrice: 'Card Price',
+        cardPricePlaceholder: 'Leave empty if not supported',
+        cardPriceTitle: 'Per-request card price (USD). Add -C suffix to model name to enable.'
+      },
+      billingMode: {
+        title: 'Billing Mode',
+        hint: 'Controls how this group charges: Balance mode deducts from user balance per token, Subscription mode deducts from quota, Card mode charges a fixed price per request.',
+        balance: 'Balance Mode',
+        subscription: 'Subscription Mode',
+        card: 'Card Mode',
+        defaultCardPrice: 'Default Card Price (USD)',
+        cardPricePlaceholder: 'e.g. 0.01',
+        cardPriceHint: 'Fixed cost per request. Model-specific card prices in rate config will override this default.'
       }
     },
 
@@ -1116,8 +1182,7 @@ export default {
       rateLimitCleared: 'Rate limit cleared successfully',
       bulkSchedulableEnabled: 'Successfully enabled scheduling for {count} account(s)',
       bulkSchedulableDisabled: 'Successfully disabled scheduling for {count} account(s)',
-      bulkSchedulablePartial: 'Scheduling updated partially: {success} succeeded, {failed} failed',
-      bulkSchedulableResultUnknown: 'Bulk scheduling result incomplete. Please retry or refresh.',
+      bulkRateLimitCleared: 'Successfully cleared rate limit for {count} account(s)',
       bulkActions: {
         selected: '{count} account(s) selected',
         selectCurrentPage: 'Select this page',
@@ -1125,7 +1190,9 @@ export default {
         edit: 'Bulk Edit',
         delete: 'Bulk Delete',
         enableScheduling: 'Enable Scheduling',
-        disableScheduling: 'Disable Scheduling'
+        disableScheduling: 'Disable Scheduling',
+        clearRateLimit: 'Clear Rate Limit',
+        confirmClearRateLimit: 'Are you sure you want to clear rate limit for selected accounts? They will be immediately available for scheduling.'
       },
       bulkEdit: {
         title: 'Bulk Edit Accounts',
@@ -1913,11 +1980,7 @@ export default {
         logoHint: 'PNG, JPG, or SVG. Max 300KB. Recommended: 80x80px square image.',
         logoSizeError: 'Image size exceeds 300KB limit ({size}KB)',
         logoTypeError: 'Please select an image file',
-        logoReadError: 'Failed to read the image file',
-        homeContent: 'Home Page Content',
-        homeContentPlaceholder: 'Enter custom content for the home page. Supports Markdown & HTML. If a URL is entered, it will be displayed as an iframe.',
-        homeContentHint: 'Customize the home page content. Supports Markdown/HTML. If you enter a URL (starting with http:// or https://), it will be used as an iframe src to embed an external page. When set, the default status information will no longer be displayed.',
-        homeContentIframeWarning: '⚠️ iframe mode note: Some websites have X-Frame-Options or CSP security policies that prevent embedding in iframes. If the page appears blank or shows an error, please verify the target website allows embedding, or consider using HTML mode to build your own content.'
+        logoReadError: 'Failed to read the image file'
       },
       smtp: {
         title: 'SMTP Settings',
@@ -2132,7 +2195,7 @@ export default {
       },
       accountPriority: {
         title: '⚖️ 4. Priority (Optional)',
-        description: '<div style="line-height: 1.7;"><p style="margin-bottom: 12px;">Set the account call priority.</p><div style="padding: 8px 12px; background: #eff6ff; border-left: 3px solid #3b82f6; border-radius: 4px; font-size: 13px; margin-bottom: 12px;"><b>📊 Priority Rules:</b><ul style="margin: 8px 0 0 16px;"><li>Lower number = higher priority</li><li>System uses low-value accounts first</li><li>Same priority = random selection</li></ul></div><p style="padding: 8px 12px; background: #f0fdf4; border-left: 3px solid #10b981; border-radius: 4px; font-size: 13px;"><b>💡 Use Case:</b> Set main account to lower value, backup accounts to higher value</p></div>',
+        description: '<div style="line-height: 1.7;"><p style="margin-bottom: 12px;">Set the account call priority.</p><div style="padding: 8px 12px; background: #eff6ff; border-left: 3px solid #3b82f6; border-radius: 4px; font-size: 13px; margin-bottom: 12px;"><b>📊 Priority Rules:</b><ul style="margin: 8px 0 0 16px;"><li>Higher number = higher priority</li><li>System uses high-priority accounts first</li><li>Same priority = random selection</li></ul></div><p style="padding: 8px 12px; background: #f0fdf4; border-left: 3px solid #10b981; border-radius: 4px; font-size: 13px;"><b>💡 Use Case:</b> Set main account to high priority, backup accounts to low priority</p></div>',
         nextBtn: 'Next'
       },
       accountGroups: {

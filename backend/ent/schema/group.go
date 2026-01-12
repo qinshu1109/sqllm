@@ -95,6 +95,17 @@ func (Group) Fields() []ent.Field {
 			Optional().
 			Nillable().
 			Comment("非 Claude Code 请求降级使用的分组 ID"),
+
+		// 计费模式 (added by migration 037)
+		field.String("billing_mode").
+			MaxLen(20).
+			Default(service.BillingModeBalance).
+			Comment("计费模式: balance(余额), subscription(订阅), card(次卡)"),
+		field.Float("default_card_price").
+			Optional().
+			Nillable().
+			SchemaType(map[string]string{dialect.Postgres: "decimal(20,8)"}).
+			Comment("次卡模式默认单次价格(USD)"),
 	}
 }
 
@@ -104,6 +115,7 @@ func (Group) Edges() []ent.Edge {
 		edge.To("redeem_codes", RedeemCode.Type),
 		edge.To("subscriptions", UserSubscription.Type),
 		edge.To("usage_logs", UsageLog.Type),
+		edge.To("model_rates", GroupModelRate.Type),
 		edge.From("accounts", Account.Type).
 			Ref("groups").
 			Through("account_groups", AccountGroup.Type),
@@ -123,5 +135,6 @@ func (Group) Indexes() []ent.Index {
 		index.Fields("subscription_type"),
 		index.Fields("is_exclusive"),
 		index.Fields("deleted_at"),
+		index.Fields("billing_mode"),
 	}
 }

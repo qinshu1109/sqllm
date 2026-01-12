@@ -8,6 +8,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Wei-Shaw/sub2api/internal/pkg/claude"
+	"github.com/Wei-Shaw/sub2api/internal/pkg/geminicli"
+	"github.com/Wei-Shaw/sub2api/internal/pkg/openai"
 	"github.com/Wei-Shaw/sub2api/internal/pkg/pagination"
 )
 
@@ -32,6 +35,7 @@ type AdminService interface {
 	UpdateGroup(ctx context.Context, id int64, input *UpdateGroupInput) (*Group, error)
 	DeleteGroup(ctx context.Context, id int64) error
 	GetGroupAPIKeys(ctx context.Context, groupID int64, page, pageSize int) ([]APIKey, int64, error)
+	GetGroupAvailableModels(ctx context.Context, groupID *int64, platform string) ([]string, error)
 
 	// Account management
 	ListAccounts(ctx context.Context, page, pageSize int, platform, accountType, status, search string) ([]Account, int64, error)
@@ -44,6 +48,7 @@ type AdminService interface {
 	ClearAccountError(ctx context.Context, id int64) (*Account, error)
 	SetAccountSchedulable(ctx context.Context, id int64, schedulable bool) (*Account, error)
 	BulkUpdateAccounts(ctx context.Context, input *BulkUpdateAccountsInput) (*BulkUpdateAccountsResult, error)
+	BulkClearRateLimit(ctx context.Context, ids []int64) (int64, error)
 
 	// Proxy management
 	ListProxies(ctx context.Context, page, pageSize int, protocol, status, search string) ([]Proxy, int64, error)
@@ -89,6 +94,13 @@ type UpdateUserInput struct {
 	AllowedGroups *[]int64 // 使用指针区分"未提供"和"设置为空数组"
 }
 
+// GroupModelRateInput represents input for setting model-specific rate multiplier
+type GroupModelRateInput struct {
+	Model          string
+	RateMultiplier float64
+	CardPrice      *float64 // 次卡模式单次请求价格(USD)，nil表示不支持次卡
+}
+
 type CreateGroupInput struct {
 	Name             string
 	Description      string
@@ -105,6 +117,11 @@ type CreateGroupInput struct {
 	ImagePrice4K    *float64
 	ClaudeCodeOnly  bool   // 仅允许 Claude Code 客户端
 	FallbackGroupID *int64 // 降级分组 ID
+	// 计费模式
+	BillingMode      string   // balance/subscription/card
+	DefaultCardPrice *float64 // 次卡模式默认价格 (USD)
+	// 模型费率配置
+	ModelRates []GroupModelRateInput
 }
 
 type UpdateGroupInput struct {
@@ -124,6 +141,11 @@ type UpdateGroupInput struct {
 	ImagePrice4K    *float64
 	ClaudeCodeOnly  *bool  // 仅允许 Claude Code 客户端
 	FallbackGroupID *int64 // 降级分组 ID
+	// 计费模式
+	BillingMode      string   // balance/subscription/card（空字符串表示不更新）
+	DefaultCardPrice *float64 // 次卡模式默认价格 (USD)
+	// 模型费率配置（nil 表示不更新，空数组表示清除所有）
+	ModelRates *[]GroupModelRateInput
 }
 
 type CreateAccountInput struct {
@@ -186,11 +208,9 @@ type BulkUpdateAccountResult struct {
 
 // BulkUpdateAccountsResult is the aggregated response for bulk updates.
 type BulkUpdateAccountsResult struct {
-	Success    int                       `json:"success"`
-	Failed     int                       `json:"failed"`
-	SuccessIDs []int64                   `json:"success_ids"`
-	FailedIDs  []int64                   `json:"failed_ids"`
-	Results    []BulkUpdateAccountResult `json:"results"`
+	Success int                       `json:"success"`
+	Failed  int                       `json:"failed"`
+	Results []BulkUpdateAccountResult `json:"results"`
 }
 
 type CreateProxyInput struct {
@@ -328,8 +348,6 @@ func (s *adminServiceImpl) UpdateUser(ctx context.Context, id int64, input *Upda
 	}
 
 	oldConcurrency := user.Concurrency
-	oldStatus := user.Status
-	oldRole := user.Role
 
 	if input.Email != "" {
 		user.Email = input.Email
@@ -361,11 +379,6 @@ func (s *adminServiceImpl) UpdateUser(ctx context.Context, id int64, input *Upda
 
 	if err := s.userRepo.Update(ctx, user); err != nil {
 		return nil, err
-	}
-	if s.authCacheInvalidator != nil {
-		if user.Concurrency != oldConcurrency || user.Status != oldStatus || user.Role != oldRole {
-			s.authCacheInvalidator.InvalidateAuthCacheByUserID(ctx, user.ID)
-		}
 	}
 
 	concurrencyDiff := user.Concurrency - oldConcurrency
@@ -405,9 +418,6 @@ func (s *adminServiceImpl) DeleteUser(ctx context.Context, id int64) error {
 		log.Printf("delete user failed: user_id=%d err=%v", id, err)
 		return err
 	}
-	if s.authCacheInvalidator != nil {
-		s.authCacheInvalidator.InvalidateAuthCacheByUserID(ctx, id)
-	}
 	return nil
 }
 
@@ -435,10 +445,6 @@ func (s *adminServiceImpl) UpdateUserBalance(ctx context.Context, userID int64, 
 	if err := s.userRepo.Update(ctx, user); err != nil {
 		return nil, err
 	}
-	balanceDiff := user.Balance - oldBalance
-	if s.authCacheInvalidator != nil && balanceDiff != 0 {
-		s.authCacheInvalidator.InvalidateAuthCacheByUserID(ctx, userID)
-	}
 
 	if s.billingCacheService != nil {
 		go func() {
@@ -450,6 +456,7 @@ func (s *adminServiceImpl) UpdateUserBalance(ctx context.Context, userID int64, 
 		}()
 	}
 
+	balanceDiff := user.Balance - oldBalance
 	if balanceDiff != 0 {
 		code, err := GenerateRedeemCode()
 		if err != nil {
@@ -546,6 +553,12 @@ func (s *adminServiceImpl) CreateGroup(ctx context.Context, input *CreateGroupIn
 		}
 	}
 
+	// 计费模式：默认为余额模式
+	billingMode := input.BillingMode
+	if billingMode == "" {
+		billingMode = BillingModeBalance
+	}
+
 	group := &Group{
 		Name:             input.Name,
 		Description:      input.Description,
@@ -562,6 +575,8 @@ func (s *adminServiceImpl) CreateGroup(ctx context.Context, input *CreateGroupIn
 		ImagePrice4K:     imagePrice4K,
 		ClaudeCodeOnly:   input.ClaudeCodeOnly,
 		FallbackGroupID:  input.FallbackGroupID,
+		BillingMode:      billingMode,
+		DefaultCardPrice: input.DefaultCardPrice,
 	}
 	if err := s.groupRepo.Create(ctx, group); err != nil {
 		return nil, err
@@ -690,24 +705,26 @@ func (s *adminServiceImpl) UpdateGroup(ctx context.Context, id int64, input *Upd
 		}
 	}
 
+	// 计费模式（空字符串表示不更新）
+	if input.BillingMode != "" {
+		group.BillingMode = input.BillingMode
+	}
+	// 次卡默认价格（nil 表示不更新，使用负数或零来清除）
+	if input.DefaultCardPrice != nil {
+		if *input.DefaultCardPrice <= 0 {
+			group.DefaultCardPrice = nil
+		} else {
+			group.DefaultCardPrice = input.DefaultCardPrice
+		}
+	}
+
 	if err := s.groupRepo.Update(ctx, group); err != nil {
 		return nil, err
-	}
-	if s.authCacheInvalidator != nil {
-		s.authCacheInvalidator.InvalidateAuthCacheByGroupID(ctx, id)
 	}
 	return group, nil
 }
 
 func (s *adminServiceImpl) DeleteGroup(ctx context.Context, id int64) error {
-	var groupKeys []string
-	if s.authCacheInvalidator != nil {
-		keys, err := s.apiKeyRepo.ListKeysByGroupID(ctx, id)
-		if err == nil {
-			groupKeys = keys
-		}
-	}
-
 	affectedUserIDs, err := s.groupRepo.DeleteCascade(ctx, id)
 	if err != nil {
 		return err
@@ -726,11 +743,6 @@ func (s *adminServiceImpl) DeleteGroup(ctx context.Context, id int64) error {
 			}
 		}()
 	}
-	if s.authCacheInvalidator != nil {
-		for _, key := range groupKeys {
-			s.authCacheInvalidator.InvalidateAuthCacheByKey(ctx, key)
-		}
-	}
 
 	return nil
 }
@@ -742,6 +754,102 @@ func (s *adminServiceImpl) GetGroupAPIKeys(ctx context.Context, groupID int64, p
 		return nil, 0, err
 	}
 	return keys, result.Total, nil
+}
+
+// GetGroupAvailableModels returns the list of models available for a group
+// It aggregates model_mapping keys from all schedulable accounts in the group
+// If an account has no model_mapping, it falls back to default models for that platform
+func (s *adminServiceImpl) GetGroupAvailableModels(ctx context.Context, groupID *int64, platform string) ([]string, error) {
+	var accounts []Account
+	var err error
+
+	if groupID != nil {
+		accounts, err = s.accountRepo.ListSchedulableByGroupID(ctx, *groupID)
+	} else {
+		accounts, err = s.accountRepo.ListSchedulable(ctx)
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(accounts) == 0 {
+		return []string{}, nil
+	}
+
+	// Filter by platform if specified
+	if platform != "" {
+		filtered := make([]Account, 0)
+		for _, acc := range accounts {
+			if acc.Platform == platform {
+				filtered = append(filtered, acc)
+			}
+		}
+		accounts = filtered
+	}
+
+	// Collect unique models from all accounts
+	modelSet := make(map[string]struct{})
+
+	for _, acc := range accounts {
+		mapping := acc.GetModelMapping()
+		if len(mapping) > 0 {
+			// Account has model_mapping, use it
+			for model := range mapping {
+				modelSet[model] = struct{}{}
+			}
+		} else {
+			// No model_mapping, fall back to default models for this platform
+			defaultModels := getDefaultModelsForPlatform(acc.Platform)
+			for _, model := range defaultModels {
+				modelSet[model] = struct{}{}
+			}
+		}
+	}
+
+	// Convert to slice
+	models := make([]string, 0, len(modelSet))
+	for model := range modelSet {
+		models = append(models, model)
+	}
+
+	return models, nil
+}
+
+// getDefaultModelsForPlatform returns default model IDs for a given platform
+func getDefaultModelsForPlatform(platform string) []string {
+	switch platform {
+	case PlatformAnthropic:
+		models := make([]string, 0, len(claude.DefaultModels))
+		for _, m := range claude.DefaultModels {
+			models = append(models, m.ID)
+		}
+		return models
+	case PlatformOpenAI:
+		models := make([]string, 0, len(openai.DefaultModels))
+		for _, m := range openai.DefaultModels {
+			models = append(models, m.ID)
+		}
+		return models
+	case PlatformGemini:
+		models := make([]string, 0, len(geminicli.DefaultModels))
+		for _, m := range geminicli.DefaultModels {
+			models = append(models, m.ID)
+		}
+		return models
+	case PlatformAntigravity:
+		// Antigravity supports both Claude and Gemini models
+		models := make([]string, 0, len(claude.DefaultModels)+len(geminicli.DefaultModels))
+		for _, m := range claude.DefaultModels {
+			models = append(models, m.ID)
+		}
+		for _, m := range geminicli.DefaultModels {
+			models = append(models, m.ID)
+		}
+		return models
+	default:
+		return []string{}
+	}
 }
 
 // Account management implementations
@@ -919,9 +1027,7 @@ func (s *adminServiceImpl) UpdateAccount(ctx context.Context, id int64, input *U
 // It merges credentials/extra keys instead of overwriting the whole object.
 func (s *adminServiceImpl) BulkUpdateAccounts(ctx context.Context, input *BulkUpdateAccountsInput) (*BulkUpdateAccountsResult, error) {
 	result := &BulkUpdateAccountsResult{
-		SuccessIDs: make([]int64, 0, len(input.AccountIDs)),
-		FailedIDs:  make([]int64, 0, len(input.AccountIDs)),
-		Results:    make([]BulkUpdateAccountResult, 0, len(input.AccountIDs)),
+		Results: make([]BulkUpdateAccountResult, 0, len(input.AccountIDs)),
 	}
 
 	if len(input.AccountIDs) == 0 {
@@ -985,7 +1091,6 @@ func (s *adminServiceImpl) BulkUpdateAccounts(ctx context.Context, input *BulkUp
 						entry.Success = false
 						entry.Error = err.Error()
 						result.Failed++
-						result.FailedIDs = append(result.FailedIDs, accountID)
 						result.Results = append(result.Results, entry)
 						continue
 					}
@@ -995,7 +1100,6 @@ func (s *adminServiceImpl) BulkUpdateAccounts(ctx context.Context, input *BulkUp
 					entry.Success = false
 					entry.Error = err.Error()
 					result.Failed++
-					result.FailedIDs = append(result.FailedIDs, accountID)
 					result.Results = append(result.Results, entry)
 					continue
 				}
@@ -1005,7 +1109,6 @@ func (s *adminServiceImpl) BulkUpdateAccounts(ctx context.Context, input *BulkUp
 				entry.Success = false
 				entry.Error = err.Error()
 				result.Failed++
-				result.FailedIDs = append(result.FailedIDs, accountID)
 				result.Results = append(result.Results, entry)
 				continue
 			}
@@ -1013,11 +1116,16 @@ func (s *adminServiceImpl) BulkUpdateAccounts(ctx context.Context, input *BulkUp
 
 		entry.Success = true
 		result.Success++
-		result.SuccessIDs = append(result.SuccessIDs, accountID)
 		result.Results = append(result.Results, entry)
 	}
 
 	return result, nil
+}
+
+// BulkClearRateLimit 批量清除账号的限流状态
+// 如果 ids 为空，则清除所有账号的限流状态
+func (s *adminServiceImpl) BulkClearRateLimit(ctx context.Context, ids []int64) (int64, error) {
+	return s.accountRepo.BulkClearRateLimit(ctx, ids)
 }
 
 func (s *adminServiceImpl) DeleteAccount(ctx context.Context, id int64) error {

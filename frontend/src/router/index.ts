@@ -5,7 +5,6 @@
 
 import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
-import { useAppStore } from '@/stores/app'
 
 /**
  * Route definitions with lazy loading
@@ -30,6 +29,42 @@ const routes: RouteRecordRaw[] = [
     meta: {
       requiresAuth: false,
       title: 'Home'
+    }
+  },
+  {
+    path: '/docs',
+    name: 'Docs',
+    component: () => import('@/views/DocsHomeView.vue'),
+    meta: {
+      requiresAuth: false,
+      title: 'Documentation'
+    }
+  },
+  {
+    path: '/docs/api/claude',
+    name: 'DocsClaudeApi',
+    component: () => import('@/views/docs/ClaudeApiDoc.vue'),
+    meta: {
+      requiresAuth: false,
+      title: 'Claude API - Documentation'
+    }
+  },
+  {
+    path: '/docs/api/gemini',
+    name: 'DocsGeminiApi',
+    component: () => import('@/views/docs/GeminiApiDoc.vue'),
+    meta: {
+      requiresAuth: false,
+      title: 'Gemini API - Documentation'
+    }
+  },
+  {
+    path: '/docs/api/openai',
+    name: 'DocsOpenAIApi',
+    component: () => import('@/views/docs/OpenAIApiDoc.vue'),
+    meta: {
+      requiresAuth: false,
+      title: 'OpenAI API - Documentation'
     }
   },
   {
@@ -324,12 +359,10 @@ router.beforeEach((to, _from, next) => {
   }
 
   // Set page title
-  const appStore = useAppStore()
-  const siteName = appStore.siteName || 'Sub2API'
   if (to.meta.title) {
-    document.title = `${to.meta.title} - ${siteName}`
+    document.title = `${to.meta.title} - Sub2API`
   } else {
-    document.title = siteName
+    document.title = 'Sub2API'
   }
 
   // Check if route requires authentication

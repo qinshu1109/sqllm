@@ -48,7 +48,9 @@ func (r *groupRepository) Create(ctx context.Context, groupIn *service.Group) er
 		SetNillableImagePrice4k(groupIn.ImagePrice4K).
 		SetDefaultValidityDays(groupIn.DefaultValidityDays).
 		SetClaudeCodeOnly(groupIn.ClaudeCodeOnly).
-		SetNillableFallbackGroupID(groupIn.FallbackGroupID)
+		SetNillableFallbackGroupID(groupIn.FallbackGroupID).
+		SetBillingMode(groupIn.BillingMode).
+		SetNillableDefaultCardPrice(groupIn.DefaultCardPrice)
 
 	created, err := builder.Save(ctx)
 	if err == nil {
@@ -97,7 +99,9 @@ func (r *groupRepository) Update(ctx context.Context, groupIn *service.Group) er
 		SetNillableImagePrice2k(groupIn.ImagePrice2K).
 		SetNillableImagePrice4k(groupIn.ImagePrice4K).
 		SetDefaultValidityDays(groupIn.DefaultValidityDays).
-		SetClaudeCodeOnly(groupIn.ClaudeCodeOnly)
+		SetClaudeCodeOnly(groupIn.ClaudeCodeOnly).
+		SetBillingMode(groupIn.BillingMode).
+		SetNillableDefaultCardPrice(groupIn.DefaultCardPrice)
 
 	// 处理 FallbackGroupID：nil 时清除，否则设置
 	if groupIn.FallbackGroupID != nil {

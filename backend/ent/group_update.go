@@ -14,6 +14,7 @@ import (
 	"github.com/Wei-Shaw/sub2api/ent/account"
 	"github.com/Wei-Shaw/sub2api/ent/apikey"
 	"github.com/Wei-Shaw/sub2api/ent/group"
+	"github.com/Wei-Shaw/sub2api/ent/groupmodelrate"
 	"github.com/Wei-Shaw/sub2api/ent/predicate"
 	"github.com/Wei-Shaw/sub2api/ent/redeemcode"
 	"github.com/Wei-Shaw/sub2api/ent/usagelog"
@@ -395,6 +396,47 @@ func (_u *GroupUpdate) ClearFallbackGroupID() *GroupUpdate {
 	return _u
 }
 
+// SetBillingMode sets the "billing_mode" field.
+func (_u *GroupUpdate) SetBillingMode(v string) *GroupUpdate {
+	_u.mutation.SetBillingMode(v)
+	return _u
+}
+
+// SetNillableBillingMode sets the "billing_mode" field if the given value is not nil.
+func (_u *GroupUpdate) SetNillableBillingMode(v *string) *GroupUpdate {
+	if v != nil {
+		_u.SetBillingMode(*v)
+	}
+	return _u
+}
+
+// SetDefaultCardPrice sets the "default_card_price" field.
+func (_u *GroupUpdate) SetDefaultCardPrice(v float64) *GroupUpdate {
+	_u.mutation.ResetDefaultCardPrice()
+	_u.mutation.SetDefaultCardPrice(v)
+	return _u
+}
+
+// SetNillableDefaultCardPrice sets the "default_card_price" field if the given value is not nil.
+func (_u *GroupUpdate) SetNillableDefaultCardPrice(v *float64) *GroupUpdate {
+	if v != nil {
+		_u.SetDefaultCardPrice(*v)
+	}
+	return _u
+}
+
+// AddDefaultCardPrice adds value to the "default_card_price" field.
+func (_u *GroupUpdate) AddDefaultCardPrice(v float64) *GroupUpdate {
+	_u.mutation.AddDefaultCardPrice(v)
+	return _u
+}
+
+// ClearDefaultCardPrice clears the value of the "default_card_price" field.
+func (_u *GroupUpdate) ClearDefaultCardPrice() *GroupUpdate {
+	_u.mutation.ClearDefaultCardPrice()
+	return _u
+}
+
 // AddAPIKeyIDs adds the "api_keys" edge to the APIKey entity by IDs.
 func (_u *GroupUpdate) AddAPIKeyIDs(ids ...int64) *GroupUpdate {
 	_u.mutation.AddAPIKeyIDs(ids...)
@@ -453,6 +495,21 @@ func (_u *GroupUpdate) AddUsageLogs(v ...*UsageLog) *GroupUpdate {
 		ids[i] = v[i].ID
 	}
 	return _u.AddUsageLogIDs(ids...)
+}
+
+// AddModelRateIDs adds the "model_rates" edge to the GroupModelRate entity by IDs.
+func (_u *GroupUpdate) AddModelRateIDs(ids ...int64) *GroupUpdate {
+	_u.mutation.AddModelRateIDs(ids...)
+	return _u
+}
+
+// AddModelRates adds the "model_rates" edges to the GroupModelRate entity.
+func (_u *GroupUpdate) AddModelRates(v ...*GroupModelRate) *GroupUpdate {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddModelRateIDs(ids...)
 }
 
 // AddAccountIDs adds the "accounts" edge to the Account entity by IDs.
@@ -574,6 +631,27 @@ func (_u *GroupUpdate) RemoveUsageLogs(v ...*UsageLog) *GroupUpdate {
 	return _u.RemoveUsageLogIDs(ids...)
 }
 
+// ClearModelRates clears all "model_rates" edges to the GroupModelRate entity.
+func (_u *GroupUpdate) ClearModelRates() *GroupUpdate {
+	_u.mutation.ClearModelRates()
+	return _u
+}
+
+// RemoveModelRateIDs removes the "model_rates" edge to GroupModelRate entities by IDs.
+func (_u *GroupUpdate) RemoveModelRateIDs(ids ...int64) *GroupUpdate {
+	_u.mutation.RemoveModelRateIDs(ids...)
+	return _u
+}
+
+// RemoveModelRates removes "model_rates" edges to GroupModelRate entities.
+func (_u *GroupUpdate) RemoveModelRates(v ...*GroupModelRate) *GroupUpdate {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveModelRateIDs(ids...)
+}
+
 // ClearAccounts clears all "accounts" edges to the Account entity.
 func (_u *GroupUpdate) ClearAccounts() *GroupUpdate {
 	_u.mutation.ClearAccounts()
@@ -678,6 +756,11 @@ func (_u *GroupUpdate) check() error {
 	if v, ok := _u.mutation.SubscriptionType(); ok {
 		if err := group.SubscriptionTypeValidator(v); err != nil {
 			return &ValidationError{Name: "subscription_type", err: fmt.Errorf(`ent: validator failed for field "Group.subscription_type": %w`, err)}
+		}
+	}
+	if v, ok := _u.mutation.BillingMode(); ok {
+		if err := group.BillingModeValidator(v); err != nil {
+			return &ValidationError{Name: "billing_mode", err: fmt.Errorf(`ent: validator failed for field "Group.billing_mode": %w`, err)}
 		}
 	}
 	return nil
@@ -802,6 +885,18 @@ func (_u *GroupUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	}
 	if _u.mutation.FallbackGroupIDCleared() {
 		_spec.ClearField(group.FieldFallbackGroupID, field.TypeInt64)
+	}
+	if value, ok := _u.mutation.BillingMode(); ok {
+		_spec.SetField(group.FieldBillingMode, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.DefaultCardPrice(); ok {
+		_spec.SetField(group.FieldDefaultCardPrice, field.TypeFloat64, value)
+	}
+	if value, ok := _u.mutation.AddedDefaultCardPrice(); ok {
+		_spec.AddField(group.FieldDefaultCardPrice, field.TypeFloat64, value)
+	}
+	if _u.mutation.DefaultCardPriceCleared() {
+		_spec.ClearField(group.FieldDefaultCardPrice, field.TypeFloat64)
 	}
 	if _u.mutation.APIKeysCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -976,6 +1071,51 @@ func (_u *GroupUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(usagelog.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.ModelRatesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   group.ModelRatesTable,
+			Columns: []string{group.ModelRatesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(groupmodelrate.FieldID, field.TypeInt64),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedModelRatesIDs(); len(nodes) > 0 && !_u.mutation.ModelRatesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   group.ModelRatesTable,
+			Columns: []string{group.ModelRatesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(groupmodelrate.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.ModelRatesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   group.ModelRatesTable,
+			Columns: []string{group.ModelRatesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(groupmodelrate.FieldID, field.TypeInt64),
 			},
 		}
 		for _, k := range nodes {
@@ -1478,6 +1618,47 @@ func (_u *GroupUpdateOne) ClearFallbackGroupID() *GroupUpdateOne {
 	return _u
 }
 
+// SetBillingMode sets the "billing_mode" field.
+func (_u *GroupUpdateOne) SetBillingMode(v string) *GroupUpdateOne {
+	_u.mutation.SetBillingMode(v)
+	return _u
+}
+
+// SetNillableBillingMode sets the "billing_mode" field if the given value is not nil.
+func (_u *GroupUpdateOne) SetNillableBillingMode(v *string) *GroupUpdateOne {
+	if v != nil {
+		_u.SetBillingMode(*v)
+	}
+	return _u
+}
+
+// SetDefaultCardPrice sets the "default_card_price" field.
+func (_u *GroupUpdateOne) SetDefaultCardPrice(v float64) *GroupUpdateOne {
+	_u.mutation.ResetDefaultCardPrice()
+	_u.mutation.SetDefaultCardPrice(v)
+	return _u
+}
+
+// SetNillableDefaultCardPrice sets the "default_card_price" field if the given value is not nil.
+func (_u *GroupUpdateOne) SetNillableDefaultCardPrice(v *float64) *GroupUpdateOne {
+	if v != nil {
+		_u.SetDefaultCardPrice(*v)
+	}
+	return _u
+}
+
+// AddDefaultCardPrice adds value to the "default_card_price" field.
+func (_u *GroupUpdateOne) AddDefaultCardPrice(v float64) *GroupUpdateOne {
+	_u.mutation.AddDefaultCardPrice(v)
+	return _u
+}
+
+// ClearDefaultCardPrice clears the value of the "default_card_price" field.
+func (_u *GroupUpdateOne) ClearDefaultCardPrice() *GroupUpdateOne {
+	_u.mutation.ClearDefaultCardPrice()
+	return _u
+}
+
 // AddAPIKeyIDs adds the "api_keys" edge to the APIKey entity by IDs.
 func (_u *GroupUpdateOne) AddAPIKeyIDs(ids ...int64) *GroupUpdateOne {
 	_u.mutation.AddAPIKeyIDs(ids...)
@@ -1536,6 +1717,21 @@ func (_u *GroupUpdateOne) AddUsageLogs(v ...*UsageLog) *GroupUpdateOne {
 		ids[i] = v[i].ID
 	}
 	return _u.AddUsageLogIDs(ids...)
+}
+
+// AddModelRateIDs adds the "model_rates" edge to the GroupModelRate entity by IDs.
+func (_u *GroupUpdateOne) AddModelRateIDs(ids ...int64) *GroupUpdateOne {
+	_u.mutation.AddModelRateIDs(ids...)
+	return _u
+}
+
+// AddModelRates adds the "model_rates" edges to the GroupModelRate entity.
+func (_u *GroupUpdateOne) AddModelRates(v ...*GroupModelRate) *GroupUpdateOne {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddModelRateIDs(ids...)
 }
 
 // AddAccountIDs adds the "accounts" edge to the Account entity by IDs.
@@ -1657,6 +1853,27 @@ func (_u *GroupUpdateOne) RemoveUsageLogs(v ...*UsageLog) *GroupUpdateOne {
 	return _u.RemoveUsageLogIDs(ids...)
 }
 
+// ClearModelRates clears all "model_rates" edges to the GroupModelRate entity.
+func (_u *GroupUpdateOne) ClearModelRates() *GroupUpdateOne {
+	_u.mutation.ClearModelRates()
+	return _u
+}
+
+// RemoveModelRateIDs removes the "model_rates" edge to GroupModelRate entities by IDs.
+func (_u *GroupUpdateOne) RemoveModelRateIDs(ids ...int64) *GroupUpdateOne {
+	_u.mutation.RemoveModelRateIDs(ids...)
+	return _u
+}
+
+// RemoveModelRates removes "model_rates" edges to GroupModelRate entities.
+func (_u *GroupUpdateOne) RemoveModelRates(v ...*GroupModelRate) *GroupUpdateOne {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveModelRateIDs(ids...)
+}
+
 // ClearAccounts clears all "accounts" edges to the Account entity.
 func (_u *GroupUpdateOne) ClearAccounts() *GroupUpdateOne {
 	_u.mutation.ClearAccounts()
@@ -1774,6 +1991,11 @@ func (_u *GroupUpdateOne) check() error {
 	if v, ok := _u.mutation.SubscriptionType(); ok {
 		if err := group.SubscriptionTypeValidator(v); err != nil {
 			return &ValidationError{Name: "subscription_type", err: fmt.Errorf(`ent: validator failed for field "Group.subscription_type": %w`, err)}
+		}
+	}
+	if v, ok := _u.mutation.BillingMode(); ok {
+		if err := group.BillingModeValidator(v); err != nil {
+			return &ValidationError{Name: "billing_mode", err: fmt.Errorf(`ent: validator failed for field "Group.billing_mode": %w`, err)}
 		}
 	}
 	return nil
@@ -1915,6 +2137,18 @@ func (_u *GroupUpdateOne) sqlSave(ctx context.Context) (_node *Group, err error)
 	}
 	if _u.mutation.FallbackGroupIDCleared() {
 		_spec.ClearField(group.FieldFallbackGroupID, field.TypeInt64)
+	}
+	if value, ok := _u.mutation.BillingMode(); ok {
+		_spec.SetField(group.FieldBillingMode, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.DefaultCardPrice(); ok {
+		_spec.SetField(group.FieldDefaultCardPrice, field.TypeFloat64, value)
+	}
+	if value, ok := _u.mutation.AddedDefaultCardPrice(); ok {
+		_spec.AddField(group.FieldDefaultCardPrice, field.TypeFloat64, value)
+	}
+	if _u.mutation.DefaultCardPriceCleared() {
+		_spec.ClearField(group.FieldDefaultCardPrice, field.TypeFloat64)
 	}
 	if _u.mutation.APIKeysCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -2089,6 +2323,51 @@ func (_u *GroupUpdateOne) sqlSave(ctx context.Context) (_node *Group, err error)
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(usagelog.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.ModelRatesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   group.ModelRatesTable,
+			Columns: []string{group.ModelRatesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(groupmodelrate.FieldID, field.TypeInt64),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedModelRatesIDs(); len(nodes) > 0 && !_u.mutation.ModelRatesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   group.ModelRatesTable,
+			Columns: []string{group.ModelRatesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(groupmodelrate.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.ModelRatesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   group.ModelRatesTable,
+			Columns: []string{group.ModelRatesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(groupmodelrate.FieldID, field.TypeInt64),
 			},
 		}
 		for _, k := range nodes {

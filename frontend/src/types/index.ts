@@ -250,6 +250,24 @@ export type GroupPlatform = 'anthropic' | 'openai' | 'gemini' | 'antigravity'
 
 export type SubscriptionType = 'standard' | 'subscription'
 
+export type BillingMode = 'balance' | 'subscription' | 'card'
+
+export interface GroupModelRate {
+  id?: number
+  group_id?: number
+  model: string
+  rate_multiplier: number
+  card_price?: number | null // 次卡模式单次请求价格(USD)
+  created_at?: string
+  updated_at?: string
+}
+
+export interface GroupModelRateInput {
+  model: string
+  rate_multiplier: number
+  card_price?: number | null // 次卡模式单次请求价格(USD)
+}
+
 export interface Group {
   id: number
   name: string
@@ -269,7 +287,11 @@ export interface Group {
   // Claude Code 客户端限制
   claude_code_only: boolean
   fallback_group_id: number | null
+  // 计费模式
+  billing_mode: BillingMode
+  default_card_price: number | null
   account_count?: number
+  model_rates?: GroupModelRate[]
   created_at: string
   updated_at: string
 }
@@ -319,6 +341,9 @@ export interface CreateGroupRequest {
   image_price_4k?: number | null
   claude_code_only?: boolean
   fallback_group_id?: number | null
+  billing_mode?: BillingMode
+  default_card_price?: number | null
+  model_rates?: GroupModelRateInput[]
 }
 
 export interface UpdateGroupRequest {
@@ -337,6 +362,9 @@ export interface UpdateGroupRequest {
   image_price_4k?: number | null
   claude_code_only?: boolean
   fallback_group_id?: number | null
+  billing_mode?: BillingMode
+  default_card_price?: number | null
+  model_rates?: GroupModelRateInput[]
 }
 
 // ==================== Account & Proxy Types ====================
@@ -652,9 +680,6 @@ export interface DashboardStats {
   total_users: number
   today_new_users: number // 今日新增用户数
   active_users: number // 今日有请求的用户数
-  hourly_active_users: number // 当前小时活跃用户数（UTC）
-  stats_updated_at: string // 统计更新时间（UTC RFC3339）
-  stats_stale: boolean // 统计是否过期
 
   // API Key 统计
   total_api_keys: number

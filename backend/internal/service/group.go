@@ -2,6 +2,17 @@ package service
 
 import "time"
 
+// GroupModelRate represents per-model rate configuration within a group
+type GroupModelRate struct {
+	ID             int64
+	GroupID        int64
+	Model          string
+	RateMultiplier float64
+	CardPrice      *float64 // 次卡模式单次请求价格(USD)，nil表示不支持次卡
+	CreatedAt      time.Time
+	UpdatedAt      time.Time
+}
+
 type Group struct {
 	ID             int64
 	Name           string
@@ -27,11 +38,18 @@ type Group struct {
 	ClaudeCodeOnly  bool
 	FallbackGroupID *int64
 
+	// 计费模式
+	BillingMode      string   // balance/subscription/card
+	DefaultCardPrice *float64 // 次卡模式默认单次价格(USD)
+
 	CreatedAt time.Time
 	UpdatedAt time.Time
 
 	AccountGroups []AccountGroup
 	AccountCount  int64
+
+	// 模型专属费率配置
+	ModelRates []GroupModelRate
 }
 
 func (g *Group) IsActive() bool {
@@ -44,6 +62,21 @@ func (g *Group) IsSubscriptionType() bool {
 
 func (g *Group) IsFreeSubscription() bool {
 	return g.IsSubscriptionType() && g.RateMultiplier == 0
+}
+
+// IsCardBillingMode 判断分组是否为次卡计费模式
+func (g *Group) IsCardBillingMode() bool {
+	return g.BillingMode == BillingModeCard
+}
+
+// IsSubscriptionBillingMode 判断分组是否为订阅计费模式
+func (g *Group) IsSubscriptionBillingMode() bool {
+	return g.BillingMode == BillingModeSubscription
+}
+
+// IsBalanceBillingMode 判断分组是否为余额计费模式
+func (g *Group) IsBalanceBillingMode() bool {
+	return g.BillingMode == "" || g.BillingMode == BillingModeBalance
 }
 
 func (g *Group) HasDailyLimit() bool {
@@ -72,6 +105,23 @@ func (g *Group) GetImagePrice(imageSize string) *float64 {
 		// 未知尺寸默认按 2K 计费
 		return g.ImagePrice2K
 	}
+}
+
+// GetCardPrice 获取指定模型的次卡价格
+// 优先级：模型级价格 > 分组默认价格
+// 如果都未配置，返回 nil
+func (g *Group) GetCardPrice(model string) *float64 {
+	if g == nil {
+		return nil
+	}
+	// 1. 先查模型级别的次卡价格
+	for _, mr := range g.ModelRates {
+		if mr.Model == model && mr.CardPrice != nil {
+			return mr.CardPrice
+		}
+	}
+	// 2. 没有则使用分组默认次卡价格
+	return g.DefaultCardPrice
 }
 
 // IsGroupContextValid reports whether a group from context has the fields required for routing decisions.

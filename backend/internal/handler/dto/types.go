@@ -35,6 +35,16 @@ type APIKey struct {
 	Group *Group `json:"group,omitempty"`
 }
 
+// GroupModelRate represents per-model rate configuration
+type GroupModelRate struct {
+	ID             int64     `json:"id"`
+	Model          string    `json:"model"`
+	RateMultiplier float64   `json:"rate_multiplier"`
+	CardPrice      *float64  `json:"card_price,omitempty"` // 次卡模式单次请求价格(USD)
+	CreatedAt      time.Time `json:"created_at"`
+	UpdatedAt      time.Time `json:"updated_at"`
+}
+
 type Group struct {
 	ID             int64   `json:"id"`
 	Name           string  `json:"name"`
@@ -58,11 +68,16 @@ type Group struct {
 	ClaudeCodeOnly  bool   `json:"claude_code_only"`
 	FallbackGroupID *int64 `json:"fallback_group_id"`
 
+	// 计费模式
+	BillingMode      string   `json:"billing_mode"`
+	DefaultCardPrice *float64 `json:"default_card_price"`
+
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 
-	AccountGroups []AccountGroup `json:"account_groups,omitempty"`
-	AccountCount  int64          `json:"account_count,omitempty"`
+	AccountGroups []AccountGroup   `json:"account_groups,omitempty"`
+	AccountCount  int64            `json:"account_count,omitempty"`
+	ModelRates    []GroupModelRate `json:"model_rates,omitempty"`
 }
 
 type Account struct {

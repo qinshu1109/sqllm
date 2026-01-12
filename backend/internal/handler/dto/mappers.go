@@ -89,6 +89,8 @@ func GroupFromServiceShallow(g *service.Group) *Group {
 		ImagePrice4K:     g.ImagePrice4K,
 		ClaudeCodeOnly:   g.ClaudeCodeOnly,
 		FallbackGroupID:  g.FallbackGroupID,
+		BillingMode:      g.BillingMode,
+		DefaultCardPrice: g.DefaultCardPrice,
 		CreatedAt:        g.CreatedAt,
 		UpdatedAt:        g.UpdatedAt,
 		AccountCount:     g.AccountCount,
@@ -105,6 +107,19 @@ func GroupFromService(g *service.Group) *Group {
 		for i := range g.AccountGroups {
 			ag := g.AccountGroups[i]
 			out.AccountGroups = append(out.AccountGroups, *AccountGroupFromService(&ag))
+		}
+	}
+	if len(g.ModelRates) > 0 {
+		out.ModelRates = make([]GroupModelRate, 0, len(g.ModelRates))
+		for _, mr := range g.ModelRates {
+			out.ModelRates = append(out.ModelRates, GroupModelRate{
+				ID:             mr.ID,
+				Model:          mr.Model,
+				RateMultiplier: mr.RateMultiplier,
+				CardPrice:      mr.CardPrice,
+				CreatedAt:      mr.CreatedAt,
+				UpdatedAt:      mr.UpdatedAt,
+			})
 		}
 	}
 	return out

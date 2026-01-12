@@ -359,6 +359,28 @@
           </div>
         </div>
 
+        <!-- 计费模式配置 -->
+        <div class="border-t pt-4">
+          <div>
+            <label class="input-label">{{ t('admin.groups.billingMode.title') }}</label>
+            <Select v-model="createForm.billing_mode" :options="billingModeOptions" />
+            <p class="input-hint">{{ t('admin.groups.billingMode.hint') }}</p>
+          </div>
+          <!-- 次卡默认价格（仅当选择次卡模式时显示） -->
+          <div v-if="createForm.billing_mode === 'card'" class="mt-3">
+            <label class="input-label">{{ t('admin.groups.billingMode.defaultCardPrice') }}</label>
+            <input
+              v-model.number="createForm.default_card_price"
+              type="number"
+              step="0.001"
+              min="0"
+              class="input"
+              :placeholder="t('admin.groups.billingMode.cardPricePlaceholder')"
+            />
+            <p class="input-hint">{{ t('admin.groups.billingMode.cardPriceHint') }}</p>
+          </div>
+        </div>
+
         <!-- 图片生成计费配置（antigravity 和 gemini 平台） -->
         <div v-if="createForm.platform === 'antigravity' || createForm.platform === 'gemini'" class="border-t pt-4">
           <label class="block mb-2 font-medium text-gray-700 dark:text-gray-300">
@@ -457,6 +479,86 @@
               :placeholder="t('admin.groups.claudeCode.noFallback')"
             />
             <p class="input-hint">{{ t('admin.groups.claudeCode.fallbackHint') }}</p>
+          </div>
+        </div>
+
+        <!-- 模型费率配置 -->
+        <div v-if="createForm.subscription_type !== 'subscription'" class="border-t pt-4">
+          <div class="flex items-center justify-between mb-2">
+            <label class="font-medium text-gray-700 dark:text-gray-300">
+              {{ t('admin.groups.modelRates.title') }}
+            </label>
+            <button
+              type="button"
+              @click="addModelRate(createForm)"
+              class="btn btn-secondary btn-sm"
+              :disabled="availableModels.length === 0 || createForm.model_rates.length >= availableModels.length"
+            >
+              <Icon name="plus" size="sm" class="mr-1" />
+              {{ t('admin.groups.modelRates.add') }}
+            </button>
+          </div>
+          <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">
+            {{ t('admin.groups.modelRates.description') }}
+          </p>
+          <div v-if="createForm.model_rates.length > 0" class="space-y-2">
+            <div
+              v-for="(rate, index) in createForm.model_rates"
+              :key="index"
+              class="flex items-center gap-2"
+            >
+              <select
+                v-model="rate.model"
+                class="input flex-1"
+              >
+                <option value="">{{ t('admin.groups.modelRates.selectModel') }}</option>
+                <option
+                  v-for="model in getAvailableModelsForSelect(createForm, index)"
+                  :key="model"
+                  :value="model"
+                >
+                  {{ model }}
+                </option>
+                <!-- 保留当前选中的值 -->
+                <option v-if="rate.model && !getAvailableModelsForSelect(createForm, index).includes(rate.model)" :value="rate.model">
+                  {{ rate.model }}
+                </option>
+              </select>
+              <div class="flex items-center gap-1">
+                <input
+                  v-model.number="rate.rate_multiplier"
+                  type="number"
+                  step="0.001"
+                  min="0.001"
+                  class="input w-20"
+                  placeholder="1.0"
+                  :title="t('admin.groups.modelRates.rateMultiplierTitle')"
+                />
+                <span class="text-sm text-gray-500">x</span>
+              </div>
+              <div class="flex items-center gap-1">
+                <span class="text-xs text-gray-400">{{ t('admin.groups.modelRates.cardPrice') }}</span>
+                <input
+                  v-model.number="rate.card_price"
+                  type="number"
+                  step="0.001"
+                  min="0"
+                  class="input w-20"
+                  :placeholder="t('admin.groups.modelRates.cardPricePlaceholder')"
+                  :title="t('admin.groups.modelRates.cardPriceTitle')"
+                />
+              </div>
+              <button
+                type="button"
+                @click="removeModelRate(createForm, index)"
+                class="p-1.5 text-gray-400 hover:text-red-500 transition-colors"
+              >
+                <Icon name="trash" size="sm" />
+              </button>
+            </div>
+          </div>
+          <div v-else class="text-sm text-gray-400 dark:text-gray-500 py-2">
+            {{ t('admin.groups.modelRates.empty') }}
           </div>
         </div>
 
@@ -660,6 +762,28 @@
           </div>
         </div>
 
+        <!-- 计费模式配置 -->
+        <div class="border-t pt-4">
+          <div>
+            <label class="input-label">{{ t('admin.groups.billingMode.title') }}</label>
+            <Select v-model="editForm.billing_mode" :options="billingModeOptions" />
+            <p class="input-hint">{{ t('admin.groups.billingMode.hint') }}</p>
+          </div>
+          <!-- 次卡默认价格（仅当选择次卡模式时显示） -->
+          <div v-if="editForm.billing_mode === 'card'" class="mt-3">
+            <label class="input-label">{{ t('admin.groups.billingMode.defaultCardPrice') }}</label>
+            <input
+              v-model.number="editForm.default_card_price"
+              type="number"
+              step="0.001"
+              min="0"
+              class="input"
+              :placeholder="t('admin.groups.billingMode.cardPricePlaceholder')"
+            />
+            <p class="input-hint">{{ t('admin.groups.billingMode.cardPriceHint') }}</p>
+          </div>
+        </div>
+
         <!-- 图片生成计费配置（antigravity 和 gemini 平台） -->
         <div v-if="editForm.platform === 'antigravity' || editForm.platform === 'gemini'" class="border-t pt-4">
           <label class="block mb-2 font-medium text-gray-700 dark:text-gray-300">
@@ -761,6 +885,86 @@
           </div>
         </div>
 
+        <!-- 模型费率配置 -->
+        <div v-if="editForm.subscription_type !== 'subscription'" class="border-t pt-4">
+          <div class="flex items-center justify-between mb-2">
+            <label class="font-medium text-gray-700 dark:text-gray-300">
+              {{ t('admin.groups.modelRates.title') }}
+            </label>
+            <button
+              type="button"
+              @click="addModelRate(editForm)"
+              class="btn btn-secondary btn-sm"
+              :disabled="availableModels.length === 0 || editForm.model_rates.length >= availableModels.length"
+            >
+              <Icon name="plus" size="sm" class="mr-1" />
+              {{ t('admin.groups.modelRates.add') }}
+            </button>
+          </div>
+          <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">
+            {{ t('admin.groups.modelRates.description') }}
+          </p>
+          <div v-if="editForm.model_rates.length > 0" class="space-y-2">
+            <div
+              v-for="(rate, index) in editForm.model_rates"
+              :key="index"
+              class="flex items-center gap-2"
+            >
+              <select
+                v-model="rate.model"
+                class="input flex-1"
+              >
+                <option value="">{{ t('admin.groups.modelRates.selectModel') }}</option>
+                <option
+                  v-for="model in getAvailableModelsForSelect(editForm, index)"
+                  :key="model"
+                  :value="model"
+                >
+                  {{ model }}
+                </option>
+                <!-- 保留当前选中的值 -->
+                <option v-if="rate.model && !getAvailableModelsForSelect(editForm, index).includes(rate.model)" :value="rate.model">
+                  {{ rate.model }}
+                </option>
+              </select>
+              <div class="flex items-center gap-1">
+                <input
+                  v-model.number="rate.rate_multiplier"
+                  type="number"
+                  step="0.001"
+                  min="0.001"
+                  class="input w-20"
+                  placeholder="1.0"
+                  :title="t('admin.groups.modelRates.rateMultiplierTitle')"
+                />
+                <span class="text-sm text-gray-500">x</span>
+              </div>
+              <div class="flex items-center gap-1">
+                <span class="text-xs text-gray-400">{{ t('admin.groups.modelRates.cardPrice') }}</span>
+                <input
+                  v-model.number="rate.card_price"
+                  type="number"
+                  step="0.001"
+                  min="0"
+                  class="input w-20"
+                  :placeholder="t('admin.groups.modelRates.cardPricePlaceholder')"
+                  :title="t('admin.groups.modelRates.cardPriceTitle')"
+                />
+              </div>
+              <button
+                type="button"
+                @click="removeModelRate(editForm, index)"
+                class="p-1.5 text-gray-400 hover:text-red-500 transition-colors"
+              >
+                <Icon name="trash" size="sm" />
+              </button>
+            </div>
+          </div>
+          <div v-else class="text-sm text-gray-400 dark:text-gray-500 py-2">
+            {{ t('admin.groups.modelRates.empty') }}
+          </div>
+        </div>
+
       </form>
 
       <template #footer>
@@ -821,7 +1025,7 @@ import { useI18n } from 'vue-i18n'
 import { useAppStore } from '@/stores/app'
 import { useOnboardingStore } from '@/stores/onboarding'
 import { adminAPI } from '@/api/admin'
-import type { Group, GroupPlatform, SubscriptionType } from '@/types'
+import type { Group, GroupPlatform, SubscriptionType, BillingMode, GroupModelRateInput } from '@/types'
 import type { Column } from '@/components/common/types'
 import AppLayout from '@/components/layout/AppLayout.vue'
 import TablePageLayout from '@/components/layout/TablePageLayout.vue'
@@ -887,6 +1091,12 @@ const subscriptionTypeOptions = computed(() => [
   { value: 'subscription', label: t('admin.groups.subscription.subscription') }
 ])
 
+const billingModeOptions = computed(() => [
+  { value: 'balance', label: t('admin.groups.billingMode.balance') },
+  { value: 'subscription', label: t('admin.groups.billingMode.subscription') },
+  { value: 'card', label: t('admin.groups.billingMode.card') }
+])
+
 // 降级分组选项（创建时）- 仅包含 anthropic 平台且未启用 claude_code_only 的分组
 const fallbackGroupOptions = computed(() => {
   const options: { value: number | null; label: string }[] = [
@@ -919,6 +1129,7 @@ const fallbackGroupOptionsForEdit = computed(() => {
 const groups = ref<Group[]>([])
 const loading = ref(false)
 const searchQuery = ref('')
+const availableModels = ref<string[]>([])
 const filters = reactive({
   platform: '',
   status: '',
@@ -956,7 +1167,12 @@ const createForm = reactive({
   image_price_4k: null as number | null,
   // Claude Code 客户端限制（仅 anthropic 平台使用）
   claude_code_only: false,
-  fallback_group_id: null as number | null
+  fallback_group_id: null as number | null,
+  // 计费模式
+  billing_mode: 'balance' as BillingMode,
+  default_card_price: null as number | null,
+  // 模型费率配置
+  model_rates: [] as GroupModelRateInput[]
 })
 
 const editForm = reactive({
@@ -976,7 +1192,12 @@ const editForm = reactive({
   image_price_4k: null as number | null,
   // Claude Code 客户端限制（仅 anthropic 平台使用）
   claude_code_only: false,
-  fallback_group_id: null as number | null
+  fallback_group_id: null as number | null,
+  // 计费模式
+  billing_mode: 'balance' as BillingMode,
+  default_card_price: null as number | null,
+  // 模型费率配置
+  model_rates: [] as GroupModelRateInput[]
 })
 
 // 根据分组类型返回不同的删除确认消息
@@ -1042,6 +1263,35 @@ const handlePageSizeChange = (pageSize: number) => {
   loadGroups()
 }
 
+// 加载可用模型列表（从分组关联账户的 model_mapping 中获取）
+const loadModels = async (groupId?: number, platform?: string) => {
+  try {
+    const models = await adminAPI.groups.getAvailableModels(groupId, platform)
+    availableModels.value = models
+  } catch (error) {
+    console.error('Error loading models:', error)
+    availableModels.value = []
+  }
+}
+
+// 添加模型费率
+const addModelRate = (form: typeof createForm | typeof editForm) => {
+  form.model_rates.push({ model: '', rate_multiplier: 1.0, card_price: null })
+}
+
+// 删除模型费率
+const removeModelRate = (form: typeof createForm | typeof editForm, index: number) => {
+  form.model_rates.splice(index, 1)
+}
+
+// 过滤已选择的模型
+const getAvailableModelsForSelect = (form: typeof createForm | typeof editForm, currentIndex: number) => {
+  const selectedModels = form.model_rates
+    .filter((_, i) => i !== currentIndex)
+    .map(r => r.model)
+  return availableModels.value.filter(m => !selectedModels.includes(m))
+}
+
 const closeCreateModal = () => {
   showCreateModal.value = false
   createForm.name = ''
@@ -1058,6 +1308,9 @@ const closeCreateModal = () => {
   createForm.image_price_4k = null
   createForm.claude_code_only = false
   createForm.fallback_group_id = null
+  createForm.billing_mode = 'balance'
+  createForm.default_card_price = null
+  createForm.model_rates = []
 }
 
 const handleCreateGroup = async () => {
@@ -1084,29 +1337,47 @@ const handleCreateGroup = async () => {
   }
 }
 
-const handleEdit = (group: Group) => {
-  editingGroup.value = group
-  editForm.name = group.name
-  editForm.description = group.description || ''
-  editForm.platform = group.platform
-  editForm.rate_multiplier = group.rate_multiplier
-  editForm.is_exclusive = group.is_exclusive
-  editForm.status = group.status
-  editForm.subscription_type = group.subscription_type || 'standard'
-  editForm.daily_limit_usd = group.daily_limit_usd
-  editForm.weekly_limit_usd = group.weekly_limit_usd
-  editForm.monthly_limit_usd = group.monthly_limit_usd
-  editForm.image_price_1k = group.image_price_1k
-  editForm.image_price_2k = group.image_price_2k
-  editForm.image_price_4k = group.image_price_4k
-  editForm.claude_code_only = group.claude_code_only || false
-  editForm.fallback_group_id = group.fallback_group_id
-  showEditModal.value = true
+const handleEdit = async (group: Group) => {
+  // 首先获取完整的分组信息（包含模型费率）
+  try {
+    const fullGroup = await adminAPI.groups.getById(group.id)
+    editingGroup.value = fullGroup
+    editForm.name = fullGroup.name
+    editForm.description = fullGroup.description || ''
+    editForm.platform = fullGroup.platform
+    editForm.rate_multiplier = fullGroup.rate_multiplier
+    editForm.is_exclusive = fullGroup.is_exclusive
+    editForm.status = fullGroup.status
+    editForm.subscription_type = fullGroup.subscription_type || 'standard'
+    editForm.daily_limit_usd = fullGroup.daily_limit_usd
+    editForm.weekly_limit_usd = fullGroup.weekly_limit_usd
+    editForm.monthly_limit_usd = fullGroup.monthly_limit_usd
+    editForm.image_price_1k = fullGroup.image_price_1k
+    editForm.image_price_2k = fullGroup.image_price_2k
+    editForm.image_price_4k = fullGroup.image_price_4k
+    editForm.claude_code_only = fullGroup.claude_code_only || false
+    editForm.fallback_group_id = fullGroup.fallback_group_id
+    editForm.billing_mode = fullGroup.billing_mode || 'balance'
+    editForm.default_card_price = fullGroup.default_card_price
+    // 加载模型费率（包含次卡价格）
+    editForm.model_rates = (fullGroup.model_rates || []).map(mr => ({
+      model: mr.model,
+      rate_multiplier: mr.rate_multiplier,
+      card_price: mr.card_price ?? null
+    }))
+    // 加载该分组关联账户的可用模型
+    await loadModels(group.id)
+    showEditModal.value = true
+  } catch (error: any) {
+    appStore.showError(error.response?.data?.detail || t('admin.groups.failedToLoad'))
+    console.error('Error loading group:', error)
+  }
 }
 
 const closeEditModal = () => {
   showEditModal.value = false
   editingGroup.value = null
+  editForm.model_rates = []
 }
 
 const handleUpdateGroup = async () => {
@@ -1162,6 +1433,28 @@ watch(
     if (newVal === 'subscription') {
       createForm.rate_multiplier = 1.0
       createForm.is_exclusive = true
+    }
+  }
+)
+
+// 监听创建表单的平台变化，重新加载该平台的可用模型
+watch(
+  () => createForm.platform,
+  async (newPlatform) => {
+    if (showCreateModal.value) {
+      // 清空已配置的模型费率（因为平台变了，之前选的模型可能不适用）
+      createForm.model_rates = []
+      await loadModels(undefined, newPlatform)
+    }
+  }
+)
+
+// 监听创建弹窗打开，加载对应平台的模型
+watch(
+  () => showCreateModal.value,
+  async (isOpen) => {
+    if (isOpen) {
+      await loadModels(undefined, createForm.platform)
     }
   }
 )

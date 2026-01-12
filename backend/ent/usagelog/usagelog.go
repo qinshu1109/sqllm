@@ -56,6 +56,8 @@ const (
 	FieldRateMultiplier = "rate_multiplier"
 	// FieldBillingType holds the string denoting the billing_type field in the database.
 	FieldBillingType = "billing_type"
+	// FieldIsCardBilling holds the string denoting the is_card_billing field in the database.
+	FieldIsCardBilling = "is_card_billing"
 	// FieldStream holds the string denoting the stream field in the database.
 	FieldStream = "stream"
 	// FieldDurationMs holds the string denoting the duration_ms field in the database.
@@ -145,6 +147,7 @@ var Columns = []string{
 	FieldActualCost,
 	FieldRateMultiplier,
 	FieldBillingType,
+	FieldIsCardBilling,
 	FieldStream,
 	FieldDurationMs,
 	FieldFirstTokenMs,
@@ -198,6 +201,8 @@ var (
 	DefaultRateMultiplier float64
 	// DefaultBillingType holds the default value on creation for the "billing_type" field.
 	DefaultBillingType int8
+	// DefaultIsCardBilling holds the default value on creation for the "is_card_billing" field.
+	DefaultIsCardBilling bool
 	// DefaultStream holds the default value on creation for the "stream" field.
 	DefaultStream bool
 	// UserAgentValidator is a validator for the "user_agent" field. It is called by the builders before save.
@@ -323,6 +328,11 @@ func ByRateMultiplier(opts ...sql.OrderTermOption) OrderOption {
 // ByBillingType orders the results by the billing_type field.
 func ByBillingType(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldBillingType, opts...).ToFunc()
+}
+
+// ByIsCardBilling orders the results by the is_card_billing field.
+func ByIsCardBilling(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldIsCardBilling, opts...).ToFunc()
 }
 
 // ByStream orders the results by the stream field.

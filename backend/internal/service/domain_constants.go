@@ -56,6 +56,13 @@ const (
 	SubscriptionTypeSubscription = "subscription" // 订阅模式（按限额控制）
 )
 
+// Group billing mode constants (控制计费扣费方式)
+const (
+	BillingModeBalance      = "balance"      // 余额模式：按 token 扣用户余额
+	BillingModeSubscription = "subscription" // 订阅模式：按 token 扣订阅额度
+	BillingModeCard         = "card"         // 次卡模式：固定价格扣用户余额
+)
+
 // Subscription status constants
 const (
 	SubscriptionStatusActive    = "active"

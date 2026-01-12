@@ -10,6 +10,15 @@ export default {
     login: '登录',
     getStarted: '开始使用',
     goToDashboard: '进入控制台',
+    searchDocs: '搜索文档',
+    quickStart: '快速开始',
+    helpDocs: '帮助文档',
+    nav: {
+      home: '首页',
+      quickStart: '入门指南',
+      apiGuide: 'API 指南',
+      visitSite: '访问官网'
+    },
     tags: {
       subscriptionToApi: '订阅转 API',
       stickySession: '粘性会话',
@@ -35,6 +44,52 @@ export default {
     },
     footer: {
       allRightsReserved: '保留所有权利。'
+    }
+  },
+
+  // Docs Home Page
+  docs: {
+    searchPlaceholder: '搜索文档',
+    nav: {
+      home: '首页',
+      quickStart: '入门指南',
+      apiGuide: 'API 指南',
+      faq: 'FAQ',
+      visitSite: '访问官网'
+    },
+    hero: {
+      subtitle: '网关平台',
+      description: '轻松调用 ',
+      descriptionSuffix: ' 等主流 AI 模型',
+      quickStart: '快速开始',
+      apiDocs: 'API 文档',
+      visitSite: '访问官网'
+    },
+    features: {
+      easyToUse: {
+        title: '简单易用',
+        description: '创建 API Key 即可调用，兼容 OpenAI SDK，无需修改现有代码。'
+      },
+      multiModel: {
+        title: '多模型支持',
+        description: '支持 Claude、OpenAI、Gemini 等主流 AI 模型，一个平台访问所有。'
+      },
+      transparent: {
+        title: '用量透明',
+        description: '实时查看 Token 消耗和费用，清晰了解每次调用成本。'
+      },
+      flexible: {
+        title: '灵活充值',
+        description: '支持卡密充值，按需付费，无月费无最低消费。'
+      },
+      reliable: {
+        title: '稳定可靠',
+        description: '智能调度多账号，自动故障转移，保障服务高可用。'
+      },
+      secure: {
+        title: '安全保障',
+        description: 'API Key 隔离、速率限制、并发控制，保护您的账户安全。'
+      }
     }
   },
 
@@ -361,12 +416,6 @@ export default {
         note: '请确保配置目录存在。macOS/Linux 用户可运行 mkdir -p ~/.codex 创建目录。',
         noteWindows: '按 Win+R，输入 %userprofile%\\.codex 打开配置目录。如目录不存在，请先手动创建。',
       },
-      cliTabs: {
-        claudeCode: 'Claude Code',
-        geminiCli: 'Gemini CLI',
-        codexCli: 'Codex CLI',
-        opencode: 'OpenCode',
-      },
       antigravity: {
         description: '为 Antigravity 分组配置 API 访问。请根据您使用的客户端选择对应的配置方式。',
         claudeCode: 'Claude Code',
@@ -378,11 +427,6 @@ export default {
         description: '将以下环境变量添加到您的终端配置文件或直接在终端中运行，以配置 Gemini CLI 访问。',
         modelComment: '如果你有 Gemini 3 权限可以填：gemini-3-pro-preview',
         note: '这些环境变量将在当前终端会话中生效。如需永久配置，请将其添加到 ~/.bashrc、~/.zshrc 或相应的配置文件中。',
-      },
-      opencode: {
-        title: 'OpenCode 配置示例',
-        subtitle: 'opencode.json',
-        hint: '示例仅用于演示分组配置，模型与选项可按需调整。',
       },
     },
     customKeyLabel: '自定义密钥',
@@ -426,6 +470,7 @@ export default {
     perRequest: '每次请求',
     apiKeyFilter: 'API 密钥',
     allApiKeys: '全部密钥',
+    allModels: '全部模型',
     timeRange: '时间范围',
     exportCsv: '导出 CSV',
     exportExcel: '导出 Excel',
@@ -981,6 +1026,27 @@ export default {
         fallbackGroup: '降级分组',
         fallbackHint: '非 Claude Code 请求将使用此分组，留空则直接拒绝',
         noFallback: '不降级（直接拒绝）'
+      },
+      modelRates: {
+        title: '模型费率配置',
+        description: '为特定模型设置独立费率倍数，优先于分组默认费率。未配置的模型使用分组默认费率。',
+        add: '添加模型',
+        selectModel: '选择模型',
+        empty: '暂未配置模型费率，将使用分组默认费率',
+        rateMultiplierTitle: '费率倍数',
+        cardPrice: '次卡价格',
+        cardPricePlaceholder: '留空表示不支持次卡',
+        cardPriceTitle: '次卡单次请求价格(USD)，请求模型时添加 -C 后缀启用'
+      },
+      billingMode: {
+        title: '计费模式',
+        hint: '控制此分组的扣费方式：余额模式按 token 扣用户余额，订阅模式扣订阅额度，次卡模式按固定价格扣余额',
+        balance: '余额模式',
+        subscription: '订阅模式',
+        card: '次卡模式',
+        defaultCardPrice: '默认次卡价格 (USD)',
+        cardPricePlaceholder: '如 0.01',
+        cardPriceHint: '每次请求扣除的固定费用。模型费率配置中的次卡价格会覆盖此默认值。'
       }
     },
 
@@ -1252,8 +1318,7 @@ export default {
       accountDeletedSuccess: '账号删除成功',
       bulkSchedulableEnabled: '成功启用 {count} 个账号的调度',
       bulkSchedulableDisabled: '成功停止 {count} 个账号的调度',
-      bulkSchedulablePartial: '部分调度更新成功：成功 {success} 个，失败 {failed} 个',
-      bulkSchedulableResultUnknown: '批量调度结果不完整，请稍后重试或刷新列表',
+      bulkRateLimitCleared: '成功清除 {count} 个账号的限流状态',
       bulkActions: {
         selected: '已选择 {count} 个账号',
         selectCurrentPage: '本页全选',
@@ -1261,7 +1326,9 @@ export default {
         edit: '批量编辑账号',
         delete: '批量删除',
         enableScheduling: '批量启用调度',
-        disableScheduling: '批量停止调度'
+        disableScheduling: '批量停止调度',
+        clearRateLimit: '清除限流',
+        confirmClearRateLimit: '确定要清除选中账号的限流状态吗？这将使账号立即恢复可调度状态。'
       },
       bulkEdit: {
         title: '批量编辑账号',
@@ -2056,11 +2123,7 @@ export default {
         logoHint: 'PNG、JPG 或 SVG 格式，最大 300KB。建议：80x80px 正方形图片。',
         logoSizeError: '图片大小超过 300KB 限制（{size}KB）',
         logoTypeError: '请选择图片文件',
-        logoReadError: '读取图片文件失败',
-        homeContent: '首页内容',
-        homeContentPlaceholder: '在此输入首页内容，支持 Markdown & HTML 代码。如果输入的是一个链接，则会使用该链接作为 iframe 的 src 属性。',
-        homeContentHint: '自定义首页内容，支持 Markdown/HTML。如果输入的是链接（以 http:// 或 https:// 开头），则会使用该链接作为 iframe 的 src 属性，这允许你设置任意网页作为首页。设置后首页的状态信息将不再显示。',
-        homeContentIframeWarning: '⚠️ iframe 模式提示：部分网站设置了 X-Frame-Options 或 CSP 安全策略，禁止被嵌入到 iframe 中。如果页面显示空白或报错，请确认目标网站允许被嵌入，或考虑使用 HTML 模式自行构建页面内容。'
+        logoReadError: '读取图片文件失败'
       },
       smtp: {
         title: 'SMTP 设置',
@@ -2273,7 +2336,7 @@ export default {
       },
       accountPriority: {
         title: '⚖️ 4. 优先级（可选）',
-        description: '<div style="line-height: 1.7;"><p style="margin-bottom: 12px;">设置账号的调用优先级。</p><div style="padding: 8px 12px; background: #eff6ff; border-left: 3px solid #3b82f6; border-radius: 4px; font-size: 13px; margin-bottom: 12px;"><b>📊 优先级规则：</b><ul style="margin: 8px 0 0 16px;"><li>数字越小，优先级越高</li><li>系统优先使用低数值账号</li><li>相同优先级则随机选择</li></ul></div><p style="padding: 8px 12px; background: #f0fdf4; border-left: 3px solid #10b981; border-radius: 4px; font-size: 13px;"><b>💡 使用场景：</b>主账号设置低数值，备用账号设置高数值</p></div>',
+        description: '<div style="line-height: 1.7;"><p style="margin-bottom: 12px;">设置账号的调用优先级。</p><div style="padding: 8px 12px; background: #eff6ff; border-left: 3px solid #3b82f6; border-radius: 4px; font-size: 13px; margin-bottom: 12px;"><b>📊 优先级规则：</b><ul style="margin: 8px 0 0 16px;"><li>数字越大，优先级越高</li><li>系统优先使用高优先级账号</li><li>相同优先级则随机选择</li></ul></div><p style="padding: 8px 12px; background: #f0fdf4; border-left: 3px solid #10b981; border-radius: 4px; font-size: 13px;"><b>💡 使用场景：</b>主账号设置高优先级，备用账号设置低优先级</p></div>',
         nextBtn: '下一步'
       },
       accountGroups: {

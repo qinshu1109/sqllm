@@ -88,6 +88,9 @@ func (UsageLog) Fields() []ent.Field {
 		// 其他字段
 		field.Int8("billing_type").
 			Default(0),
+		field.Bool("is_card_billing").
+			Default(false).
+			Comment("是否使用次卡计费模式"),
 		field.Bool("stream").
 			Default(false),
 		field.Int("duration_ms").

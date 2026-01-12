@@ -436,6 +436,20 @@ func (_u *UsageLogUpdate) AddBillingType(v int8) *UsageLogUpdate {
 	return _u
 }
 
+// SetIsCardBilling sets the "is_card_billing" field.
+func (_u *UsageLogUpdate) SetIsCardBilling(v bool) *UsageLogUpdate {
+	_u.mutation.SetIsCardBilling(v)
+	return _u
+}
+
+// SetNillableIsCardBilling sets the "is_card_billing" field if the given value is not nil.
+func (_u *UsageLogUpdate) SetNillableIsCardBilling(v *bool) *UsageLogUpdate {
+	if v != nil {
+		_u.SetIsCardBilling(*v)
+	}
+	return _u
+}
+
 // SetStream sets the "stream" field.
 func (_u *UsageLogUpdate) SetStream(v bool) *UsageLogUpdate {
 	_u.mutation.SetStream(v)
@@ -812,6 +826,9 @@ func (_u *UsageLogUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	}
 	if value, ok := _u.mutation.AddedBillingType(); ok {
 		_spec.AddField(usagelog.FieldBillingType, field.TypeInt8, value)
+	}
+	if value, ok := _u.mutation.IsCardBilling(); ok {
+		_spec.SetField(usagelog.FieldIsCardBilling, field.TypeBool, value)
 	}
 	if value, ok := _u.mutation.Stream(); ok {
 		_spec.SetField(usagelog.FieldStream, field.TypeBool, value)
@@ -1427,6 +1444,20 @@ func (_u *UsageLogUpdateOne) AddBillingType(v int8) *UsageLogUpdateOne {
 	return _u
 }
 
+// SetIsCardBilling sets the "is_card_billing" field.
+func (_u *UsageLogUpdateOne) SetIsCardBilling(v bool) *UsageLogUpdateOne {
+	_u.mutation.SetIsCardBilling(v)
+	return _u
+}
+
+// SetNillableIsCardBilling sets the "is_card_billing" field if the given value is not nil.
+func (_u *UsageLogUpdateOne) SetNillableIsCardBilling(v *bool) *UsageLogUpdateOne {
+	if v != nil {
+		_u.SetIsCardBilling(*v)
+	}
+	return _u
+}
+
 // SetStream sets the "stream" field.
 func (_u *UsageLogUpdateOne) SetStream(v bool) *UsageLogUpdateOne {
 	_u.mutation.SetStream(v)
@@ -1833,6 +1864,9 @@ func (_u *UsageLogUpdateOne) sqlSave(ctx context.Context) (_node *UsageLog, err 
 	}
 	if value, ok := _u.mutation.AddedBillingType(); ok {
 		_spec.AddField(usagelog.FieldBillingType, field.TypeInt8, value)
+	}
+	if value, ok := _u.mutation.IsCardBilling(); ok {
+		_spec.SetField(usagelog.FieldIsCardBilling, field.TypeBool, value)
 	}
 	if value, ok := _u.mutation.Stream(); ok {
 		_spec.SetField(usagelog.FieldStream, field.TypeBool, value)

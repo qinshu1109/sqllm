@@ -14,6 +14,7 @@ import (
 	"github.com/Wei-Shaw/sub2api/ent/account"
 	"github.com/Wei-Shaw/sub2api/ent/apikey"
 	"github.com/Wei-Shaw/sub2api/ent/group"
+	"github.com/Wei-Shaw/sub2api/ent/groupmodelrate"
 	"github.com/Wei-Shaw/sub2api/ent/redeemcode"
 	"github.com/Wei-Shaw/sub2api/ent/usagelog"
 	"github.com/Wei-Shaw/sub2api/ent/user"
@@ -286,6 +287,34 @@ func (_c *GroupCreate) SetNillableFallbackGroupID(v *int64) *GroupCreate {
 	return _c
 }
 
+// SetBillingMode sets the "billing_mode" field.
+func (_c *GroupCreate) SetBillingMode(v string) *GroupCreate {
+	_c.mutation.SetBillingMode(v)
+	return _c
+}
+
+// SetNillableBillingMode sets the "billing_mode" field if the given value is not nil.
+func (_c *GroupCreate) SetNillableBillingMode(v *string) *GroupCreate {
+	if v != nil {
+		_c.SetBillingMode(*v)
+	}
+	return _c
+}
+
+// SetDefaultCardPrice sets the "default_card_price" field.
+func (_c *GroupCreate) SetDefaultCardPrice(v float64) *GroupCreate {
+	_c.mutation.SetDefaultCardPrice(v)
+	return _c
+}
+
+// SetNillableDefaultCardPrice sets the "default_card_price" field if the given value is not nil.
+func (_c *GroupCreate) SetNillableDefaultCardPrice(v *float64) *GroupCreate {
+	if v != nil {
+		_c.SetDefaultCardPrice(*v)
+	}
+	return _c
+}
+
 // AddAPIKeyIDs adds the "api_keys" edge to the APIKey entity by IDs.
 func (_c *GroupCreate) AddAPIKeyIDs(ids ...int64) *GroupCreate {
 	_c.mutation.AddAPIKeyIDs(ids...)
@@ -344,6 +373,21 @@ func (_c *GroupCreate) AddUsageLogs(v ...*UsageLog) *GroupCreate {
 		ids[i] = v[i].ID
 	}
 	return _c.AddUsageLogIDs(ids...)
+}
+
+// AddModelRateIDs adds the "model_rates" edge to the GroupModelRate entity by IDs.
+func (_c *GroupCreate) AddModelRateIDs(ids ...int64) *GroupCreate {
+	_c.mutation.AddModelRateIDs(ids...)
+	return _c
+}
+
+// AddModelRates adds the "model_rates" edges to the GroupModelRate entity.
+func (_c *GroupCreate) AddModelRates(v ...*GroupModelRate) *GroupCreate {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddModelRateIDs(ids...)
 }
 
 // AddAccountIDs adds the "accounts" edge to the Account entity by IDs.
@@ -455,6 +499,10 @@ func (_c *GroupCreate) defaults() error {
 		v := group.DefaultClaudeCodeOnly
 		_c.mutation.SetClaudeCodeOnly(v)
 	}
+	if _, ok := _c.mutation.BillingMode(); !ok {
+		v := group.DefaultBillingMode
+		_c.mutation.SetBillingMode(v)
+	}
 	return nil
 }
 
@@ -509,6 +557,14 @@ func (_c *GroupCreate) check() error {
 	}
 	if _, ok := _c.mutation.ClaudeCodeOnly(); !ok {
 		return &ValidationError{Name: "claude_code_only", err: errors.New(`ent: missing required field "Group.claude_code_only"`)}
+	}
+	if _, ok := _c.mutation.BillingMode(); !ok {
+		return &ValidationError{Name: "billing_mode", err: errors.New(`ent: missing required field "Group.billing_mode"`)}
+	}
+	if v, ok := _c.mutation.BillingMode(); ok {
+		if err := group.BillingModeValidator(v); err != nil {
+			return &ValidationError{Name: "billing_mode", err: fmt.Errorf(`ent: validator failed for field "Group.billing_mode": %w`, err)}
+		}
 	}
 	return nil
 }
@@ -613,6 +669,14 @@ func (_c *GroupCreate) createSpec() (*Group, *sqlgraph.CreateSpec) {
 		_spec.SetField(group.FieldFallbackGroupID, field.TypeInt64, value)
 		_node.FallbackGroupID = &value
 	}
+	if value, ok := _c.mutation.BillingMode(); ok {
+		_spec.SetField(group.FieldBillingMode, field.TypeString, value)
+		_node.BillingMode = value
+	}
+	if value, ok := _c.mutation.DefaultCardPrice(); ok {
+		_spec.SetField(group.FieldDefaultCardPrice, field.TypeFloat64, value)
+		_node.DefaultCardPrice = &value
+	}
 	if nodes := _c.mutation.APIKeysIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
@@ -670,6 +734,22 @@ func (_c *GroupCreate) createSpec() (*Group, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(usagelog.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.ModelRatesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   group.ModelRatesTable,
+			Columns: []string{group.ModelRatesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(groupmodelrate.FieldID, field.TypeInt64),
 			},
 		}
 		for _, k := range nodes {
@@ -1093,6 +1173,42 @@ func (u *GroupUpsert) ClearFallbackGroupID() *GroupUpsert {
 	return u
 }
 
+// SetBillingMode sets the "billing_mode" field.
+func (u *GroupUpsert) SetBillingMode(v string) *GroupUpsert {
+	u.Set(group.FieldBillingMode, v)
+	return u
+}
+
+// UpdateBillingMode sets the "billing_mode" field to the value that was provided on create.
+func (u *GroupUpsert) UpdateBillingMode() *GroupUpsert {
+	u.SetExcluded(group.FieldBillingMode)
+	return u
+}
+
+// SetDefaultCardPrice sets the "default_card_price" field.
+func (u *GroupUpsert) SetDefaultCardPrice(v float64) *GroupUpsert {
+	u.Set(group.FieldDefaultCardPrice, v)
+	return u
+}
+
+// UpdateDefaultCardPrice sets the "default_card_price" field to the value that was provided on create.
+func (u *GroupUpsert) UpdateDefaultCardPrice() *GroupUpsert {
+	u.SetExcluded(group.FieldDefaultCardPrice)
+	return u
+}
+
+// AddDefaultCardPrice adds v to the "default_card_price" field.
+func (u *GroupUpsert) AddDefaultCardPrice(v float64) *GroupUpsert {
+	u.Add(group.FieldDefaultCardPrice, v)
+	return u
+}
+
+// ClearDefaultCardPrice clears the value of the "default_card_price" field.
+func (u *GroupUpsert) ClearDefaultCardPrice() *GroupUpsert {
+	u.SetNull(group.FieldDefaultCardPrice)
+	return u
+}
+
 // UpdateNewValues updates the mutable fields using the new values that were set on create.
 // Using this option is equivalent to using:
 //
@@ -1513,6 +1629,48 @@ func (u *GroupUpsertOne) UpdateFallbackGroupID() *GroupUpsertOne {
 func (u *GroupUpsertOne) ClearFallbackGroupID() *GroupUpsertOne {
 	return u.Update(func(s *GroupUpsert) {
 		s.ClearFallbackGroupID()
+	})
+}
+
+// SetBillingMode sets the "billing_mode" field.
+func (u *GroupUpsertOne) SetBillingMode(v string) *GroupUpsertOne {
+	return u.Update(func(s *GroupUpsert) {
+		s.SetBillingMode(v)
+	})
+}
+
+// UpdateBillingMode sets the "billing_mode" field to the value that was provided on create.
+func (u *GroupUpsertOne) UpdateBillingMode() *GroupUpsertOne {
+	return u.Update(func(s *GroupUpsert) {
+		s.UpdateBillingMode()
+	})
+}
+
+// SetDefaultCardPrice sets the "default_card_price" field.
+func (u *GroupUpsertOne) SetDefaultCardPrice(v float64) *GroupUpsertOne {
+	return u.Update(func(s *GroupUpsert) {
+		s.SetDefaultCardPrice(v)
+	})
+}
+
+// AddDefaultCardPrice adds v to the "default_card_price" field.
+func (u *GroupUpsertOne) AddDefaultCardPrice(v float64) *GroupUpsertOne {
+	return u.Update(func(s *GroupUpsert) {
+		s.AddDefaultCardPrice(v)
+	})
+}
+
+// UpdateDefaultCardPrice sets the "default_card_price" field to the value that was provided on create.
+func (u *GroupUpsertOne) UpdateDefaultCardPrice() *GroupUpsertOne {
+	return u.Update(func(s *GroupUpsert) {
+		s.UpdateDefaultCardPrice()
+	})
+}
+
+// ClearDefaultCardPrice clears the value of the "default_card_price" field.
+func (u *GroupUpsertOne) ClearDefaultCardPrice() *GroupUpsertOne {
+	return u.Update(func(s *GroupUpsert) {
+		s.ClearDefaultCardPrice()
 	})
 }
 
@@ -2102,6 +2260,48 @@ func (u *GroupUpsertBulk) UpdateFallbackGroupID() *GroupUpsertBulk {
 func (u *GroupUpsertBulk) ClearFallbackGroupID() *GroupUpsertBulk {
 	return u.Update(func(s *GroupUpsert) {
 		s.ClearFallbackGroupID()
+	})
+}
+
+// SetBillingMode sets the "billing_mode" field.
+func (u *GroupUpsertBulk) SetBillingMode(v string) *GroupUpsertBulk {
+	return u.Update(func(s *GroupUpsert) {
+		s.SetBillingMode(v)
+	})
+}
+
+// UpdateBillingMode sets the "billing_mode" field to the value that was provided on create.
+func (u *GroupUpsertBulk) UpdateBillingMode() *GroupUpsertBulk {
+	return u.Update(func(s *GroupUpsert) {
+		s.UpdateBillingMode()
+	})
+}
+
+// SetDefaultCardPrice sets the "default_card_price" field.
+func (u *GroupUpsertBulk) SetDefaultCardPrice(v float64) *GroupUpsertBulk {
+	return u.Update(func(s *GroupUpsert) {
+		s.SetDefaultCardPrice(v)
+	})
+}
+
+// AddDefaultCardPrice adds v to the "default_card_price" field.
+func (u *GroupUpsertBulk) AddDefaultCardPrice(v float64) *GroupUpsertBulk {
+	return u.Update(func(s *GroupUpsert) {
+		s.AddDefaultCardPrice(v)
+	})
+}
+
+// UpdateDefaultCardPrice sets the "default_card_price" field to the value that was provided on create.
+func (u *GroupUpsertBulk) UpdateDefaultCardPrice() *GroupUpsertBulk {
+	return u.Update(func(s *GroupUpsert) {
+		s.UpdateDefaultCardPrice()
+	})
+}
+
+// ClearDefaultCardPrice clears the value of the "default_card_price" field.
+func (u *GroupUpsertBulk) ClearDefaultCardPrice() *GroupUpsertBulk {
+	return u.Update(func(s *GroupUpsert) {
+		s.ClearDefaultCardPrice()
 	})
 }
 

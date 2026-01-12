@@ -160,6 +160,11 @@ func BillingType(v int8) predicate.UsageLog {
 	return predicate.UsageLog(sql.FieldEQ(FieldBillingType, v))
 }
 
+// IsCardBilling applies equality check predicate on the "is_card_billing" field. It's identical to IsCardBillingEQ.
+func IsCardBilling(v bool) predicate.UsageLog {
+	return predicate.UsageLog(sql.FieldEQ(FieldIsCardBilling, v))
+}
+
 // Stream applies equality check predicate on the "stream" field. It's identical to StreamEQ.
 func Stream(v bool) predicate.UsageLog {
 	return predicate.UsageLog(sql.FieldEQ(FieldStream, v))
@@ -1008,6 +1013,16 @@ func BillingTypeLT(v int8) predicate.UsageLog {
 // BillingTypeLTE applies the LTE predicate on the "billing_type" field.
 func BillingTypeLTE(v int8) predicate.UsageLog {
 	return predicate.UsageLog(sql.FieldLTE(FieldBillingType, v))
+}
+
+// IsCardBillingEQ applies the EQ predicate on the "is_card_billing" field.
+func IsCardBillingEQ(v bool) predicate.UsageLog {
+	return predicate.UsageLog(sql.FieldEQ(FieldIsCardBilling, v))
+}
+
+// IsCardBillingNEQ applies the NEQ predicate on the "is_card_billing" field.
+func IsCardBillingNEQ(v bool) predicate.UsageLog {
+	return predicate.UsageLog(sql.FieldNEQ(FieldIsCardBilling, v))
 }
 
 // StreamEQ applies the EQ predicate on the "stream" field.

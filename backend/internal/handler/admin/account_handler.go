@@ -692,6 +692,32 @@ func (h *AccountHandler) BulkUpdate(c *gin.Context) {
 	response.Success(c, result)
 }
 
+// BulkClearRateLimitRequest represents the payload for bulk clearing rate limits
+type BulkClearRateLimitRequest struct {
+	AccountIDs []int64 `json:"account_ids"` // 可选，为空则清除所有
+}
+
+// BulkClearRateLimit handles bulk clearing rate limit status for accounts
+// POST /api/v1/admin/accounts/bulk-clear-rate-limit
+func (h *AccountHandler) BulkClearRateLimit(c *gin.Context) {
+	var req BulkClearRateLimitRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, "Invalid request: "+err.Error())
+		return
+	}
+
+	affected, err := h.adminService.BulkClearRateLimit(c.Request.Context(), req.AccountIDs)
+	if err != nil {
+		response.ErrorFrom(c, err)
+		return
+	}
+
+	response.Success(c, gin.H{
+		"affected": affected,
+		"message":  "Rate limit cleared successfully",
+	})
+}
+
 // ========== OAuth Handlers ==========
 
 // GenerateAuthURLRequest represents the request for generating auth URL
