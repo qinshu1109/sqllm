@@ -14,6 +14,7 @@ import (
 	"github.com/Wei-Shaw/sub2api/ent/account"
 	"github.com/Wei-Shaw/sub2api/ent/apikey"
 	"github.com/Wei-Shaw/sub2api/ent/group"
+	"github.com/Wei-Shaw/sub2api/ent/groupmodelrate"
 	"github.com/Wei-Shaw/sub2api/ent/redeemcode"
 	"github.com/Wei-Shaw/sub2api/ent/usagelog"
 	"github.com/Wei-Shaw/sub2api/ent/user"
@@ -346,6 +347,21 @@ func (_c *GroupCreate) AddUsageLogs(v ...*UsageLog) *GroupCreate {
 	return _c.AddUsageLogIDs(ids...)
 }
 
+// AddModelRateIDs adds the "model_rates" edge to the GroupModelRate entity by IDs.
+func (_c *GroupCreate) AddModelRateIDs(ids ...int64) *GroupCreate {
+	_c.mutation.AddModelRateIDs(ids...)
+	return _c
+}
+
+// AddModelRates adds the "model_rates" edges to the GroupModelRate entity.
+func (_c *GroupCreate) AddModelRates(v ...*GroupModelRate) *GroupCreate {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddModelRateIDs(ids...)
+}
+
 // AddAccountIDs adds the "accounts" edge to the Account entity by IDs.
 func (_c *GroupCreate) AddAccountIDs(ids ...int64) *GroupCreate {
 	_c.mutation.AddAccountIDs(ids...)
@@ -670,6 +686,22 @@ func (_c *GroupCreate) createSpec() (*Group, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(usagelog.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.ModelRatesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   group.ModelRatesTable,
+			Columns: []string{group.ModelRatesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(groupmodelrate.FieldID, field.TypeInt64),
 			},
 		}
 		for _, k := range nodes {

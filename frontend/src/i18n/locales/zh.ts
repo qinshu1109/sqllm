@@ -4,6 +4,8 @@ export default {
     viewOnGithub: '在 GitHub 上查看',
     viewDocs: '查看文档',
     docs: '文档',
+    quickStart: '快速开始',
+    helpDocs: '帮助文档',
     switchToLight: '切换到浅色模式',
     switchToDark: '切换到深色模式',
     dashboard: '控制台',
@@ -35,6 +37,52 @@ export default {
     },
     footer: {
       allRightsReserved: '保留所有权利。'
+    }
+  },
+
+  // Docs Home Page
+  docs: {
+    searchPlaceholder: '搜索文档',
+    nav: {
+      home: '首页',
+      quickStart: '入门指南',
+      apiGuide: 'API 指南',
+      faq: 'FAQ',
+      visitSite: '访问官网'
+    },
+    hero: {
+      subtitle: '网关平台',
+      description: '轻松调用 ',
+      descriptionSuffix: ' 等主流 AI 模型',
+      quickStart: '快速开始',
+      apiDocs: 'API 文档',
+      visitSite: '访问官网'
+    },
+    features: {
+      easyToUse: {
+        title: '简单易用',
+        description: '创建 API Key 即可调用，兼容 OpenAI SDK，无需修改现有代码。'
+      },
+      multiModel: {
+        title: '多模型支持',
+        description: '支持 Claude、OpenAI、Gemini 等主流 AI 模型，一个平台访问所有。'
+      },
+      transparent: {
+        title: '用量透明',
+        description: '实时查看 Token 消耗和费用，清晰了解每次调用成本。'
+      },
+      flexible: {
+        title: '灵活充值',
+        description: '支持卡密充值，按需付费，无月费无最低消费。'
+      },
+      reliable: {
+        title: '稳定可靠',
+        description: '智能调度多账号，自动故障转移，保障服务高可用。'
+      },
+      secure: {
+        title: '安全保障',
+        description: 'API Key 隔离、速率限制、并发控制，保护您的账户安全。'
+      }
     }
   },
 
@@ -387,7 +435,7 @@ export default {
       opencode: {
         title: 'OpenCode 配置示例',
         subtitle: 'opencode.json',
-        hint: '配置文件路径：~/.config/opencode/opencode.json（或 opencode.jsonc），不存在需手动创建。可使用默认 provider（openai/anthropic/google）或自定义 provider_id。API Key 支持直接配置或通过客户端 /connect 命令配置。示例仅供参考，模型与选项可按需调整。',
+        hint: '配置文件路径：~/.config/opencode/opencode.json，不存在需手动创建。示例仅供参考，模型与选项可按需调整。',
       },
     },
     customKeyLabel: '自定义密钥',
@@ -465,7 +513,8 @@ export default {
     exportExcelSuccess: '使用数据导出成功（Excel格式）',
     exportExcelFailed: '使用数据导出失败',
     imageUnit: '张',
-    userAgent: 'User-Agent'
+    userAgent: 'User-Agent',
+    allModels: '全部模型'
   },
 
   // Redeem
@@ -2087,9 +2136,6 @@ export default {
         '1h': '近1小时',
         '6h': '近6小时',
         '24h': '近24小时'
-      },
-      fullscreen: {
-        enter: '进入全屏'
       },
       diagnosis: {
         title: '智能诊断',

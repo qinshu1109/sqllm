@@ -36,6 +36,7 @@ type Handlers struct {
 	Admin         *AdminHandlers
 	Gateway       *GatewayHandler
 	OpenAIGateway *OpenAIGatewayHandler
+	OpenAIChat    *OpenAIChatHandler
 	Setting       *SettingHandler
 }
 

@@ -9,6 +9,7 @@ import (
 	"github.com/Wei-Shaw/sub2api/ent/accountgroup"
 	"github.com/Wei-Shaw/sub2api/ent/apikey"
 	"github.com/Wei-Shaw/sub2api/ent/group"
+	"github.com/Wei-Shaw/sub2api/ent/groupmodelrate"
 	"github.com/Wei-Shaw/sub2api/ent/promocode"
 	"github.com/Wei-Shaw/sub2api/ent/promocodeusage"
 	"github.com/Wei-Shaw/sub2api/ent/proxy"
@@ -276,6 +277,40 @@ func init() {
 	groupDescClaudeCodeOnly := groupFields[14].Descriptor()
 	// group.DefaultClaudeCodeOnly holds the default value on creation for the claude_code_only field.
 	group.DefaultClaudeCodeOnly = groupDescClaudeCodeOnly.Default.(bool)
+	groupmodelrateFields := schema.GroupModelRate{}.Fields()
+	_ = groupmodelrateFields
+	// groupmodelrateDescModel is the schema descriptor for model field.
+	groupmodelrateDescModel := groupmodelrateFields[1].Descriptor()
+	// groupmodelrate.ModelValidator is a validator for the "model" field. It is called by the builders before save.
+	groupmodelrate.ModelValidator = func() func(string) error {
+		validators := groupmodelrateDescModel.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+		}
+		return func(model string) error {
+			for _, fn := range fns {
+				if err := fn(model); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	// groupmodelrateDescRateMultiplier is the schema descriptor for rate_multiplier field.
+	groupmodelrateDescRateMultiplier := groupmodelrateFields[2].Descriptor()
+	// groupmodelrate.DefaultRateMultiplier holds the default value on creation for the rate_multiplier field.
+	groupmodelrate.DefaultRateMultiplier = groupmodelrateDescRateMultiplier.Default.(float64)
+	// groupmodelrateDescCreatedAt is the schema descriptor for created_at field.
+	groupmodelrateDescCreatedAt := groupmodelrateFields[4].Descriptor()
+	// groupmodelrate.DefaultCreatedAt holds the default value on creation for the created_at field.
+	groupmodelrate.DefaultCreatedAt = groupmodelrateDescCreatedAt.Default.(func() time.Time)
+	// groupmodelrateDescUpdatedAt is the schema descriptor for updated_at field.
+	groupmodelrateDescUpdatedAt := groupmodelrateFields[5].Descriptor()
+	// groupmodelrate.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	groupmodelrate.DefaultUpdatedAt = groupmodelrateDescUpdatedAt.Default.(func() time.Time)
+	// groupmodelrate.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	groupmodelrate.UpdateDefaultUpdatedAt = groupmodelrateDescUpdatedAt.UpdateDefault.(func() time.Time)
 	promocodeFields := schema.PromoCode{}.Fields()
 	_ = promocodeFields
 	// promocodeDescCode is the schema descriptor for code field.

@@ -54,6 +54,11 @@ func RegisterGatewayRoutes(
 	// OpenAI Responses API（不带v1前缀的别名）
 	r.POST("/responses", bodyLimit, clientRequestID, opsErrorLogger, gin.HandlerFunc(apiKeyAuth), h.OpenAIGateway.Responses)
 
+	// OpenAI Chat Completions API（代理到 LiteLLM，支持 Claude 缓存注入）
+	// 注：这些路由不使用 sub2API 的认证，直接透传到 LiteLLM（LiteLLM 可配置自己的认证）
+	r.POST("/v1/chat/completions", bodyLimit, clientRequestID, opsErrorLogger, h.OpenAIChat.ChatCompletions)
+	r.POST("/chat/completions", bodyLimit, clientRequestID, opsErrorLogger, h.OpenAIChat.ChatCompletions)
+
 	// Antigravity 模型列表
 	r.GET("/antigravity/models", gin.HandlerFunc(apiKeyAuth), h.Gateway.AntigravityModels)
 

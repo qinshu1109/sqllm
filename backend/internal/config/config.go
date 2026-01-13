@@ -253,6 +253,17 @@ type GatewayConfig struct {
 
 	// Scheduling: 账号调度相关配置
 	Scheduling GatewaySchedulingConfig `mapstructure:"scheduling"`
+
+	// LiteLLM: OpenAI Chat 代理配置
+	LiteLLM LiteLLMConfig `mapstructure:"litellm"`
+}
+
+// LiteLLMConfig LiteLLM 后端配置（用于 OpenAI Chat 代理）
+type LiteLLMConfig struct {
+	// URL: LiteLLM 后端地址
+	URL string `mapstructure:"url"`
+	// EnableClaudeCaching: 是否对 Claude 模型启用缓存注入
+	EnableClaudeCaching bool `mapstructure:"enable_claude_caching"`
 }
 
 // GatewaySchedulingConfig accounts scheduling configuration.
@@ -781,6 +792,9 @@ func setDefaults() {
 	viper.SetDefault("gateway.scheduling.outbox_lag_rebuild_failures", 3)
 	viper.SetDefault("gateway.scheduling.outbox_backlog_rebuild_rows", 10000)
 	viper.SetDefault("gateway.scheduling.full_rebuild_interval_seconds", 300)
+	// LiteLLM 配置
+	viper.SetDefault("gateway.litellm.url", "http://localhost:4000")
+	viper.SetDefault("gateway.litellm.enable_claude_caching", true)
 	viper.SetDefault("concurrency.ping_interval", 10)
 
 	// TokenRefresh

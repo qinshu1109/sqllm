@@ -4,6 +4,8 @@ export default {
     viewOnGithub: 'View on GitHub',
     viewDocs: 'View Documentation',
     docs: 'Docs',
+    quickStart: 'Quick Start',
+    helpDocs: 'Help Docs',
     switchToLight: 'Switch to Light Mode',
     switchToDark: 'Switch to Dark Mode',
     dashboard: 'Dashboard',
@@ -38,6 +40,52 @@ export default {
     },
     footer: {
       allRightsReserved: 'All rights reserved.'
+    }
+  },
+
+  // Docs Home Page
+  docs: {
+    searchPlaceholder: 'Search docs',
+    nav: {
+      home: 'Home',
+      quickStart: 'Quick Start',
+      apiGuide: 'API Guide',
+      faq: 'FAQ',
+      visitSite: 'Visit Site'
+    },
+    hero: {
+      subtitle: 'Gateway Platform',
+      description: 'Easily access ',
+      descriptionSuffix: ' and other mainstream AI models',
+      quickStart: 'Quick Start',
+      apiDocs: 'API Docs',
+      visitSite: 'Visit Site'
+    },
+    features: {
+      easyToUse: {
+        title: 'Easy to Use',
+        description: 'Create an API Key to get started. Compatible with OpenAI SDK, no code changes needed.'
+      },
+      multiModel: {
+        title: 'Multi-Model Support',
+        description: 'Support Claude, OpenAI, Gemini and more. Access all models from one platform.'
+      },
+      transparent: {
+        title: 'Transparent Usage',
+        description: 'Real-time token consumption and cost tracking. Know the cost of every API call.'
+      },
+      flexible: {
+        title: 'Flexible Billing',
+        description: 'Pay as you go with redeem codes. No monthly fees, no minimum spending.'
+      },
+      reliable: {
+        title: 'Reliable Service',
+        description: 'Smart multi-account routing with automatic failover. High availability guaranteed.'
+      },
+      secure: {
+        title: 'Security First',
+        description: 'API Key isolation, rate limiting, concurrency control. Keep your account safe.'
+      }
     }
   },
 
@@ -390,7 +438,7 @@ export default {
       opencode: {
         title: 'OpenCode Example',
         subtitle: 'opencode.json',
-        hint: 'Config path: ~/.config/opencode/opencode.json (or opencode.jsonc), create if not exists. Use default providers (openai/anthropic/google) or custom provider_id. API Key can be configured directly or via /connect command. This is an example, adjust models and options as needed.',
+        hint: 'Config path: ~/.config/opencode/opencode.json (create if not exists). This is an example, adjust model and options as needed.',
       },
     },
     customKeyLabel: 'Custom Key',
@@ -1942,9 +1990,6 @@ export default {
         '1h': 'Last 1 hour',
         '6h': 'Last 6 hours',
         '24h': 'Last 24 hours'
-      },
-      fullscreen: {
-        enter: 'Enter Fullscreen'
       },
       diagnosis: {
         title: 'Smart Diagnosis',

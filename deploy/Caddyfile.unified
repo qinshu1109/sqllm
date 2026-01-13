@@ -1,0 +1,65 @@
+# =============================================================================
+# Sub2API + LiteLLM 统一反向代理配置
+# 监听端口: 8000 (统一入口)
+# =============================================================================
+
+{
+    # 仅 HTTP，不自动 HTTPS (本地开发)
+    auto_https off
+
+    servers {
+        timeouts {
+            read_body 30s
+            read_header 10s
+            write 600s
+            idle 300s
+        }
+    }
+}
+
+:8000 {
+    # =========================================================================
+    # LiteLLM 路由 (OpenAI Chat/Completions/Embeddings)
+    # =========================================================================
+
+    # 注：/v1/chat/completions 和 /chat/completions 已改为走 sub2API 处理（支持缓存注入）
+    @litellm path /v1/completions /v1/embeddings
+    reverse_proxy @litellm localhost:4000 {
+        header_up X-Real-IP {remote_host}
+        header_up X-Forwarded-For {remote_host}
+        header_up X-Forwarded-Proto {scheme}
+        transport http {
+            keepalive 120s
+            keepalive_idle_conns 64
+        }
+        # SSE 流式传输优化
+        flush_interval -1
+    }
+
+    # =========================================================================
+    # Sub2API 路由 (默认，包括 Claude/Gemini/管理/前端)
+    # =========================================================================
+
+    reverse_proxy localhost:8080 {
+        header_up X-Real-IP {remote_host}
+        header_up X-Forwarded-For {remote_host}
+        header_up X-Forwarded-Proto {scheme}
+        header_up X-Forwarded-Host {host}
+
+        transport http {
+            keepalive 120s
+            keepalive_idle_conns 256
+        }
+
+        # SSE 流式传输优化
+        flush_interval -1
+    }
+
+    # =========================================================================
+    # 日志配置
+    # =========================================================================
+    log {
+        output file /tmp/caddy-unified.log
+        level INFO
+    }
+}

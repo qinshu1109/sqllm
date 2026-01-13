@@ -250,6 +250,20 @@ export type GroupPlatform = 'anthropic' | 'openai' | 'gemini' | 'antigravity'
 
 export type SubscriptionType = 'standard' | 'subscription'
 
+export interface GroupModelRate {
+  id?: number
+  group_id?: number
+  model: string
+  rate_multiplier: number
+  created_at?: string
+  updated_at?: string
+}
+
+export interface GroupModelRateInput {
+  model: string
+  rate_multiplier: number
+}
+
 export interface Group {
   id: number
   name: string
@@ -270,6 +284,7 @@ export interface Group {
   claude_code_only: boolean
   fallback_group_id: number | null
   account_count?: number
+  model_rates?: GroupModelRate[]
   created_at: string
   updated_at: string
 }
@@ -607,6 +622,9 @@ export interface UsageLog {
 
   // IP 地址（仅管理员可见）
   ip_address: string | null
+
+  // 计费类型 (0=Balance, 1=Subscription)
+  billing_type?: number
 
   created_at: string
 

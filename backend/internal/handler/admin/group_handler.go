@@ -272,3 +272,30 @@ func (h *GroupHandler) GetGroupAPIKeys(c *gin.Context) {
 	}
 	response.Paginated(c, outKeys, total, page, pageSize)
 }
+
+// GetAvailableModels handles getting available models for a group
+// GET /api/v1/admin/groups/:id/models
+// GET /api/v1/admin/groups/models?platform=xxx (for new group creation)
+func (h *GroupHandler) GetAvailableModels(c *gin.Context) {
+	var groupID *int64
+	platform := c.Query("platform")
+
+	// Check if we have a group ID in the path
+	idParam := c.Param("id")
+	if idParam != "" {
+		id, err := strconv.ParseInt(idParam, 10, 64)
+		if err != nil {
+			response.BadRequest(c, "Invalid group ID")
+			return
+		}
+		groupID = &id
+	}
+
+	models, err := h.adminService.GetGroupAvailableModels(c.Request.Context(), groupID, platform)
+	if err != nil {
+		response.ErrorFrom(c, err)
+		return
+	}
+
+	response.Success(c, models)
+}

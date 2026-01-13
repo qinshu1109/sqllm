@@ -101,6 +101,17 @@
               />
             </div>
 
+            <!-- Model Filter -->
+            <div class="min-w-[200px]">
+              <label class="input-label">{{ t('usage.model') }}</label>
+              <Select
+                v-model="filters.model"
+                :options="modelOptions"
+                :placeholder="t('usage.allModels')"
+                @change="applyFilters"
+              />
+            </div>
+
             <!-- Date Range Filter -->
             <div>
               <label class="input-label">{{ t('usage.timeRange') }}</label>
@@ -273,6 +284,19 @@
             </div>
           </template>
 
+          <template #cell-billing_type="{ row }">
+            <span
+              class="inline-flex items-center rounded px-2 py-0.5 text-xs font-medium"
+              :class="
+                row.billing_type === 1
+                  ? 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200'
+                  : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200'
+              "
+            >
+              {{ row.billing_type === 1 ? t('usage.subscription') : t('usage.balance') }}
+            </span>
+          </template>
+
           <template #cell-first_token="{ row }">
             <span
               v-if="row.first_token_ms != null"
@@ -293,11 +317,6 @@
             <span class="text-sm text-gray-600 dark:text-gray-400">{{
               formatDateTime(value)
             }}</span>
-          </template>
-
-          <template #cell-user_agent="{ row }">
-            <span v-if="row.user_agent" class="text-sm text-gray-600 dark:text-gray-400 max-w-[150px] truncate block" :title="row.user_agent">{{ formatUserAgent(row.user_agent) }}</span>
-            <span v-else class="text-sm text-gray-400 dark:text-gray-500">-</span>
           </template>
 
           <template #empty>
@@ -441,7 +460,7 @@ import EmptyState from '@/components/common/EmptyState.vue'
 import Select from '@/components/common/Select.vue'
 import DateRangePicker from '@/components/common/DateRangePicker.vue'
 import Icon from '@/components/icons/Icon.vue'
-import type { UsageLog, ApiKey, UsageQueryParams, UsageStatsResponse } from '@/types'
+import type { UsageLog, ApiKey, UsageQueryParams, UsageStatsResponse, ModelStat } from '@/types'
 import type { Column } from '@/components/common/types'
 import { formatDateTime } from '@/utils/format'
 
@@ -469,14 +488,15 @@ const columns = computed<Column[]>(() => [
   { key: 'stream', label: t('usage.type'), sortable: false },
   { key: 'tokens', label: t('usage.tokens'), sortable: false },
   { key: 'cost', label: t('usage.cost'), sortable: false },
+  { key: 'billing_type', label: t('usage.billingType'), sortable: false },
   { key: 'first_token', label: t('usage.firstToken'), sortable: false },
   { key: 'duration', label: t('usage.duration'), sortable: false },
-  { key: 'created_at', label: t('usage.time'), sortable: true },
-  { key: 'user_agent', label: t('usage.userAgent'), sortable: false }
+  { key: 'created_at', label: t('usage.time'), sortable: true }
 ])
 
 const usageLogs = ref<UsageLog[]>([])
 const apiKeys = ref<ApiKey[]>([])
+const models = ref<ModelStat[]>([])
 const loading = ref(false)
 const exporting = ref(false)
 
@@ -486,6 +506,16 @@ const apiKeyOptions = computed(() => {
     ...apiKeys.value.map((key) => ({
       value: key.id,
       label: key.name
+    }))
+  ]
+})
+
+const modelOptions = computed(() => {
+  return [
+    { value: null, label: t('usage.allModels') },
+    ...models.value.map((m) => ({
+      value: m.model,
+      label: m.model
     }))
   ]
 })
@@ -506,6 +536,7 @@ const endDate = ref(formatLocalDate(now))
 
 const filters = ref<UsageQueryParams>({
   api_key_id: undefined,
+  model: undefined,
   start_date: undefined,
   end_date: undefined
 })
@@ -535,19 +566,6 @@ const pagination = reactive({
 const formatDuration = (ms: number): string => {
   if (ms < 1000) return `${ms.toFixed(0)}ms`
   return `${(ms / 1000).toFixed(2)}s`
-}
-
-const formatUserAgent = (ua: string): string => {
-  // 提取主要客户端标识
-  if (ua.includes('claude-cli')) return ua.match(/claude-cli\/[\d.]+/)?.[0] || 'Claude CLI'
-  if (ua.includes('Cursor')) return 'Cursor'
-  if (ua.includes('VSCode') || ua.includes('vscode')) return 'VS Code'
-  if (ua.includes('Continue')) return 'Continue'
-  if (ua.includes('Cline')) return 'Cline'
-  if (ua.includes('OpenAI')) return 'OpenAI SDK'
-  if (ua.includes('anthropic')) return 'Anthropic SDK'
-  // 截断过长的 UA
-  return ua.length > 30 ? ua.substring(0, 30) + '...' : ua
 }
 
 const formatTokens = (value: number): string => {
@@ -618,6 +636,15 @@ const loadApiKeys = async () => {
   }
 }
 
+const loadModels = async () => {
+  try {
+    const response = await usageAPI.getDashboardModels()
+    models.value = response.models || []
+  } catch (error) {
+    console.error('Failed to load models:', error)
+  }
+}
+
 const loadUsageStats = async () => {
   try {
     const apiKeyId = filters.value.api_key_id ? Number(filters.value.api_key_id) : undefined
@@ -641,6 +668,7 @@ const applyFilters = () => {
 const resetFilters = () => {
   filters.value = {
     api_key_id: undefined,
+    model: undefined,
     start_date: undefined,
     end_date: undefined
   }
@@ -731,6 +759,7 @@ const exportToCSV = async () => {
       'Rate Multiplier',
       'Billed Cost',
       'Original Cost',
+      'Billing Type',
       'First Token (ms)',
       'Duration (ms)'
     ]
@@ -747,6 +776,7 @@ const exportToCSV = async () => {
         log.rate_multiplier,
         log.actual_cost.toFixed(8),
         log.total_cost.toFixed(8),
+        log.billing_type === 1 ? 'Subscription' : 'Balance',
         log.first_token_ms ?? '',
         log.duration_ms
       ].map(escapeCSVValue)
@@ -809,6 +839,7 @@ const hideTokenTooltip = () => {
 
 onMounted(() => {
   loadApiKeys()
+  loadModels()
   loadUsageLogs()
   loadUsageStats()
 })

@@ -16,7 +16,6 @@
                 type="text"
                 :placeholder="t('admin.groups.searchGroups')"
                 class="input pl-10"
-                @input="handleSearch"
               />
             </div>
           <Select
@@ -65,7 +64,7 @@
       </template>
 
       <template #table>
-        <DataTable :columns="columns" :data="groups" :loading="loading">
+        <DataTable :columns="columns" :data="displayedGroups" :loading="loading">
           <template #cell-name="{ value }">
             <span class="font-medium text-gray-900 dark:text-white">{{ value }}</span>
           </template>
@@ -404,59 +403,68 @@
           </div>
         </div>
 
-        <!-- Claude Code 客户端限制（仅 anthropic 平台） -->
-        <div v-if="createForm.platform === 'anthropic'" class="border-t pt-4">
-          <div class="mb-1.5 flex items-center gap-1">
-            <label class="text-sm font-medium text-gray-700 dark:text-gray-300">
-              {{ t('admin.groups.claudeCode.title') }}
+        <!-- 模型费率配置 -->
+        <div v-if="createForm.subscription_type !== 'subscription'" class="border-t pt-4">
+          <div class="flex items-center justify-between mb-2">
+            <label class="font-medium text-gray-700 dark:text-gray-300">
+              {{ t('admin.groups.modelRates.title') }}
             </label>
-            <!-- Help Tooltip -->
-            <div class="group relative inline-flex">
-              <Icon
-                name="questionCircle"
-                size="sm"
-                :stroke-width="2"
-                class="cursor-help text-gray-400 transition-colors hover:text-primary-500 dark:text-gray-500 dark:hover:text-primary-400"
-              />
-              <div class="pointer-events-none absolute bottom-full left-0 z-50 mb-2 w-72 opacity-0 transition-all duration-200 group-hover:pointer-events-auto group-hover:opacity-100">
-                <div class="rounded-lg bg-gray-900 p-3 text-white shadow-lg dark:bg-gray-800">
-                  <p class="text-xs leading-relaxed text-gray-300">
-                    {{ t('admin.groups.claudeCode.tooltip') }}
-                  </p>
-                  <div class="absolute -bottom-1.5 left-3 h-3 w-3 rotate-45 bg-gray-900 dark:bg-gray-800"></div>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="flex items-center gap-3">
             <button
               type="button"
-              @click="createForm.claude_code_only = !createForm.claude_code_only"
-              :class="[
-                'relative inline-flex h-6 w-11 items-center rounded-full transition-colors',
-                createForm.claude_code_only ? 'bg-primary-500' : 'bg-gray-300 dark:bg-dark-600'
-              ]"
+              @click="addModelRate(createForm)"
+              class="btn btn-secondary btn-sm"
+              :disabled="availableModels.length === 0 || createForm.model_rates.length >= availableModels.length"
             >
-              <span
-                :class="[
-                  'inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform',
-                  createForm.claude_code_only ? 'translate-x-6' : 'translate-x-1'
-                ]"
-              />
+              <Icon name="plus" size="sm" class="mr-1" />
+              {{ t('admin.groups.modelRates.add') }}
             </button>
-            <span class="text-sm text-gray-500 dark:text-gray-400">
-              {{ createForm.claude_code_only ? t('admin.groups.claudeCode.enabled') : t('admin.groups.claudeCode.disabled') }}
-            </span>
           </div>
-          <!-- 降级分组选择（仅当启用 claude_code_only 时显示） -->
-          <div v-if="createForm.claude_code_only" class="mt-3">
-            <label class="input-label">{{ t('admin.groups.claudeCode.fallbackGroup') }}</label>
-            <Select
-              v-model="createForm.fallback_group_id"
-              :options="fallbackGroupOptions"
-              :placeholder="t('admin.groups.claudeCode.noFallback')"
-            />
-            <p class="input-hint">{{ t('admin.groups.claudeCode.fallbackHint') }}</p>
+          <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">
+            {{ t('admin.groups.modelRates.description') }}
+          </p>
+          <div v-if="createForm.model_rates.length > 0" class="space-y-2">
+            <div
+              v-for="(rate, index) in createForm.model_rates"
+              :key="index"
+              class="flex items-center gap-2"
+            >
+              <select
+                v-model="rate.model"
+                class="input flex-1"
+              >
+                <option value="">{{ t('admin.groups.modelRates.selectModel') }}</option>
+                <option
+                  v-for="model in getAvailableModelsForSelect(createForm, index)"
+                  :key="model"
+                  :value="model"
+                >
+                  {{ model }}
+                </option>
+                <!-- 保留当前选中的值 -->
+                <option v-if="rate.model && !getAvailableModelsForSelect(createForm, index).includes(rate.model)" :value="rate.model">
+                  {{ rate.model }}
+                </option>
+              </select>
+              <input
+                v-model.number="rate.rate_multiplier"
+                type="number"
+                step="0.001"
+                min="0.001"
+                class="input w-24"
+                placeholder="1.0"
+              />
+              <span class="text-sm text-gray-500">x</span>
+              <button
+                type="button"
+                @click="removeModelRate(createForm, index)"
+                class="p-1.5 text-gray-400 hover:text-red-500 transition-colors"
+              >
+                <Icon name="trash" size="sm" />
+              </button>
+            </div>
+          </div>
+          <div v-else class="text-sm text-gray-400 dark:text-gray-500 py-2">
+            {{ t('admin.groups.modelRates.empty') }}
           </div>
         </div>
 
@@ -705,59 +713,68 @@
           </div>
         </div>
 
-        <!-- Claude Code 客户端限制（仅 anthropic 平台） -->
-        <div v-if="editForm.platform === 'anthropic'" class="border-t pt-4">
-          <div class="mb-1.5 flex items-center gap-1">
-            <label class="text-sm font-medium text-gray-700 dark:text-gray-300">
-              {{ t('admin.groups.claudeCode.title') }}
+        <!-- 模型费率配置 -->
+        <div v-if="editForm.subscription_type !== 'subscription'" class="border-t pt-4">
+          <div class="flex items-center justify-between mb-2">
+            <label class="font-medium text-gray-700 dark:text-gray-300">
+              {{ t('admin.groups.modelRates.title') }}
             </label>
-            <!-- Help Tooltip -->
-            <div class="group relative inline-flex">
-              <Icon
-                name="questionCircle"
-                size="sm"
-                :stroke-width="2"
-                class="cursor-help text-gray-400 transition-colors hover:text-primary-500 dark:text-gray-500 dark:hover:text-primary-400"
-              />
-              <div class="pointer-events-none absolute bottom-full left-0 z-50 mb-2 w-72 opacity-0 transition-all duration-200 group-hover:pointer-events-auto group-hover:opacity-100">
-                <div class="rounded-lg bg-gray-900 p-3 text-white shadow-lg dark:bg-gray-800">
-                  <p class="text-xs leading-relaxed text-gray-300">
-                    {{ t('admin.groups.claudeCode.tooltip') }}
-                  </p>
-                  <div class="absolute -bottom-1.5 left-3 h-3 w-3 rotate-45 bg-gray-900 dark:bg-gray-800"></div>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="flex items-center gap-3">
             <button
               type="button"
-              @click="editForm.claude_code_only = !editForm.claude_code_only"
-              :class="[
-                'relative inline-flex h-6 w-11 items-center rounded-full transition-colors',
-                editForm.claude_code_only ? 'bg-primary-500' : 'bg-gray-300 dark:bg-dark-600'
-              ]"
+              @click="addModelRate(editForm)"
+              class="btn btn-secondary btn-sm"
+              :disabled="availableModels.length === 0 || editForm.model_rates.length >= availableModels.length"
             >
-              <span
-                :class="[
-                  'inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform',
-                  editForm.claude_code_only ? 'translate-x-6' : 'translate-x-1'
-                ]"
-              />
+              <Icon name="plus" size="sm" class="mr-1" />
+              {{ t('admin.groups.modelRates.add') }}
             </button>
-            <span class="text-sm text-gray-500 dark:text-gray-400">
-              {{ editForm.claude_code_only ? t('admin.groups.claudeCode.enabled') : t('admin.groups.claudeCode.disabled') }}
-            </span>
           </div>
-          <!-- 降级分组选择（仅当启用 claude_code_only 时显示） -->
-          <div v-if="editForm.claude_code_only" class="mt-3">
-            <label class="input-label">{{ t('admin.groups.claudeCode.fallbackGroup') }}</label>
-            <Select
-              v-model="editForm.fallback_group_id"
-              :options="fallbackGroupOptionsForEdit"
-              :placeholder="t('admin.groups.claudeCode.noFallback')"
-            />
-            <p class="input-hint">{{ t('admin.groups.claudeCode.fallbackHint') }}</p>
+          <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">
+            {{ t('admin.groups.modelRates.description') }}
+          </p>
+          <div v-if="editForm.model_rates.length > 0" class="space-y-2">
+            <div
+              v-for="(rate, index) in editForm.model_rates"
+              :key="index"
+              class="flex items-center gap-2"
+            >
+              <select
+                v-model="rate.model"
+                class="input flex-1"
+              >
+                <option value="">{{ t('admin.groups.modelRates.selectModel') }}</option>
+                <option
+                  v-for="model in getAvailableModelsForSelect(editForm, index)"
+                  :key="model"
+                  :value="model"
+                >
+                  {{ model }}
+                </option>
+                <!-- 保留当前选中的值 -->
+                <option v-if="rate.model && !getAvailableModelsForSelect(editForm, index).includes(rate.model)" :value="rate.model">
+                  {{ rate.model }}
+                </option>
+              </select>
+              <input
+                v-model.number="rate.rate_multiplier"
+                type="number"
+                step="0.001"
+                min="0.001"
+                class="input w-24"
+                placeholder="1.0"
+              />
+              <span class="text-sm text-gray-500">x</span>
+              <button
+                type="button"
+                @click="removeModelRate(editForm, index)"
+                class="p-1.5 text-gray-400 hover:text-red-500 transition-colors"
+              >
+                <Icon name="trash" size="sm" />
+              </button>
+            </div>
+          </div>
+          <div v-else class="text-sm text-gray-400 dark:text-gray-500 py-2">
+            {{ t('admin.groups.modelRates.empty') }}
           </div>
         </div>
 
@@ -821,7 +838,7 @@ import { useI18n } from 'vue-i18n'
 import { useAppStore } from '@/stores/app'
 import { useOnboardingStore } from '@/stores/onboarding'
 import { adminAPI } from '@/api/admin'
-import type { Group, GroupPlatform, SubscriptionType } from '@/types'
+import type { Group, GroupPlatform, SubscriptionType, GroupModelRateInput } from '@/types'
 import type { Column } from '@/components/common/types'
 import AppLayout from '@/components/layout/AppLayout.vue'
 import TablePageLayout from '@/components/layout/TablePageLayout.vue'
@@ -887,38 +904,10 @@ const subscriptionTypeOptions = computed(() => [
   { value: 'subscription', label: t('admin.groups.subscription.subscription') }
 ])
 
-// 降级分组选项（创建时）- 仅包含 anthropic 平台且未启用 claude_code_only 的分组
-const fallbackGroupOptions = computed(() => {
-  const options: { value: number | null; label: string }[] = [
-    { value: null, label: t('admin.groups.claudeCode.noFallback') }
-  ]
-  const eligibleGroups = groups.value.filter(
-    (g) => g.platform === 'anthropic' && !g.claude_code_only && g.status === 'active'
-  )
-  eligibleGroups.forEach((g) => {
-    options.push({ value: g.id, label: g.name })
-  })
-  return options
-})
-
-// 降级分组选项（编辑时）- 排除自身
-const fallbackGroupOptionsForEdit = computed(() => {
-  const options: { value: number | null; label: string }[] = [
-    { value: null, label: t('admin.groups.claudeCode.noFallback') }
-  ]
-  const currentId = editingGroup.value?.id
-  const eligibleGroups = groups.value.filter(
-    (g) => g.platform === 'anthropic' && !g.claude_code_only && g.status === 'active' && g.id !== currentId
-  )
-  eligibleGroups.forEach((g) => {
-    options.push({ value: g.id, label: g.name })
-  })
-  return options
-})
-
 const groups = ref<Group[]>([])
 const loading = ref(false)
 const searchQuery = ref('')
+const availableModels = ref<string[]>([])
 const filters = reactive({
   platform: '',
   status: '',
@@ -932,6 +921,16 @@ const pagination = reactive({
 })
 
 let abortController: AbortController | null = null
+
+const displayedGroups = computed(() => {
+  const q = searchQuery.value.trim().toLowerCase()
+  if (!q) return groups.value
+  return groups.value.filter((group) => {
+    const name = group.name?.toLowerCase?.() ?? ''
+    const description = group.description?.toLowerCase?.() ?? ''
+    return name.includes(q) || description.includes(q)
+  })
+})
 
 const showCreateModal = ref(false)
 const showEditModal = ref(false)
@@ -954,9 +953,8 @@ const createForm = reactive({
   image_price_1k: null as number | null,
   image_price_2k: null as number | null,
   image_price_4k: null as number | null,
-  // Claude Code 客户端限制（仅 anthropic 平台使用）
-  claude_code_only: false,
-  fallback_group_id: null as number | null
+  // 模型费率配置
+  model_rates: [] as GroupModelRateInput[]
 })
 
 const editForm = reactive({
@@ -974,9 +972,8 @@ const editForm = reactive({
   image_price_1k: null as number | null,
   image_price_2k: null as number | null,
   image_price_4k: null as number | null,
-  // Claude Code 客户端限制（仅 anthropic 平台使用）
-  claude_code_only: false,
-  fallback_group_id: null as number | null
+  // 模型费率配置
+  model_rates: [] as GroupModelRateInput[]
 })
 
 // 根据分组类型返回不同的删除确认消息
@@ -1002,8 +999,7 @@ const loadGroups = async () => {
     const response = await adminAPI.groups.list(pagination.page, pagination.page_size, {
       platform: (filters.platform as GroupPlatform) || undefined,
       status: filters.status as any,
-      is_exclusive: filters.is_exclusive ? filters.is_exclusive === 'true' : undefined,
-      search: searchQuery.value.trim() || undefined
+      is_exclusive: filters.is_exclusive ? filters.is_exclusive === 'true' : undefined
     }, { signal })
     if (signal.aborted) return
     groups.value = response.items
@@ -1022,15 +1018,6 @@ const loadGroups = async () => {
   }
 }
 
-let searchTimeout: ReturnType<typeof setTimeout>
-const handleSearch = () => {
-  clearTimeout(searchTimeout)
-  searchTimeout = setTimeout(() => {
-    pagination.page = 1
-    loadGroups()
-  }, 300)
-}
-
 const handlePageChange = (page: number) => {
   pagination.page = page
   loadGroups()
@@ -1040,6 +1027,35 @@ const handlePageSizeChange = (pageSize: number) => {
   pagination.page_size = pageSize
   pagination.page = 1
   loadGroups()
+}
+
+// 加载可用模型列表（从分组关联账户的 model_mapping 中获取）
+const loadModels = async (groupId?: number, platform?: string) => {
+  try {
+    const models = await adminAPI.groups.getAvailableModels(groupId, platform)
+    availableModels.value = models
+  } catch (error) {
+    console.error('Error loading models:', error)
+    availableModels.value = []
+  }
+}
+
+// 添加模型费率
+const addModelRate = (form: typeof createForm | typeof editForm) => {
+  form.model_rates.push({ model: '', rate_multiplier: 1.0 })
+}
+
+// 删除模型费率
+const removeModelRate = (form: typeof createForm | typeof editForm, index: number) => {
+  form.model_rates.splice(index, 1)
+}
+
+// 过滤已选择的模型
+const getAvailableModelsForSelect = (form: typeof createForm | typeof editForm, currentIndex: number) => {
+  const selectedModels = form.model_rates
+    .filter((_, i) => i !== currentIndex)
+    .map(r => r.model)
+  return availableModels.value.filter(m => !selectedModels.includes(m))
 }
 
 const closeCreateModal = () => {
@@ -1056,8 +1072,7 @@ const closeCreateModal = () => {
   createForm.image_price_1k = null
   createForm.image_price_2k = null
   createForm.image_price_4k = null
-  createForm.claude_code_only = false
-  createForm.fallback_group_id = null
+  createForm.model_rates = []
 }
 
 const handleCreateGroup = async () => {
@@ -1084,29 +1099,42 @@ const handleCreateGroup = async () => {
   }
 }
 
-const handleEdit = (group: Group) => {
-  editingGroup.value = group
-  editForm.name = group.name
-  editForm.description = group.description || ''
-  editForm.platform = group.platform
-  editForm.rate_multiplier = group.rate_multiplier
-  editForm.is_exclusive = group.is_exclusive
-  editForm.status = group.status
-  editForm.subscription_type = group.subscription_type || 'standard'
-  editForm.daily_limit_usd = group.daily_limit_usd
-  editForm.weekly_limit_usd = group.weekly_limit_usd
-  editForm.monthly_limit_usd = group.monthly_limit_usd
-  editForm.image_price_1k = group.image_price_1k
-  editForm.image_price_2k = group.image_price_2k
-  editForm.image_price_4k = group.image_price_4k
-  editForm.claude_code_only = group.claude_code_only || false
-  editForm.fallback_group_id = group.fallback_group_id
-  showEditModal.value = true
+const handleEdit = async (group: Group) => {
+  // 首先获取完整的分组信息（包含模型费率）
+  try {
+    const fullGroup = await adminAPI.groups.getById(group.id)
+    editingGroup.value = fullGroup
+    editForm.name = fullGroup.name
+    editForm.description = fullGroup.description || ''
+    editForm.platform = fullGroup.platform
+    editForm.rate_multiplier = fullGroup.rate_multiplier
+    editForm.is_exclusive = fullGroup.is_exclusive
+    editForm.status = fullGroup.status
+    editForm.subscription_type = fullGroup.subscription_type || 'standard'
+    editForm.daily_limit_usd = fullGroup.daily_limit_usd
+    editForm.weekly_limit_usd = fullGroup.weekly_limit_usd
+    editForm.monthly_limit_usd = fullGroup.monthly_limit_usd
+    editForm.image_price_1k = fullGroup.image_price_1k
+    editForm.image_price_2k = fullGroup.image_price_2k
+    editForm.image_price_4k = fullGroup.image_price_4k
+    // 加载模型费率
+    editForm.model_rates = (fullGroup.model_rates || []).map(mr => ({
+      model: mr.model,
+      rate_multiplier: mr.rate_multiplier
+    }))
+    // 加载该分组关联账户的可用模型
+    await loadModels(group.id)
+    showEditModal.value = true
+  } catch (error: any) {
+    appStore.showError(error.response?.data?.detail || t('admin.groups.failedToLoad'))
+    console.error('Error loading group:', error)
+  }
 }
 
 const closeEditModal = () => {
   showEditModal.value = false
   editingGroup.value = null
+  editForm.model_rates = []
 }
 
 const handleUpdateGroup = async () => {
@@ -1118,12 +1146,7 @@ const handleUpdateGroup = async () => {
 
   submitting.value = true
   try {
-    // 转换 fallback_group_id: null -> 0 (后端使用 0 表示清除)
-    const payload = {
-      ...editForm,
-      fallback_group_id: editForm.fallback_group_id === null ? 0 : editForm.fallback_group_id
-    }
-    await adminAPI.groups.update(editingGroup.value.id, payload)
+    await adminAPI.groups.update(editingGroup.value.id, editForm)
     appStore.showSuccess(t('admin.groups.groupUpdated'))
     closeEditModal()
     loadGroups()
@@ -1162,6 +1185,28 @@ watch(
     if (newVal === 'subscription') {
       createForm.rate_multiplier = 1.0
       createForm.is_exclusive = true
+    }
+  }
+)
+
+// 监听创建表单的平台变化，重新加载该平台的可用模型
+watch(
+  () => createForm.platform,
+  async (newPlatform) => {
+    if (showCreateModal.value) {
+      // 清空已配置的模型费率（因为平台变了，之前选的模型可能不适用）
+      createForm.model_rates = []
+      await loadModels(undefined, newPlatform)
+    }
+  }
+)
+
+// 监听创建弹窗打开，加载对应平台的模型
+watch(
+  () => showCreateModal.value,
+  async (isOpen) => {
+    if (isOpen) {
+      await loadModels(undefined, createForm.platform)
     }
   }
 )

@@ -259,6 +259,47 @@ var (
 			},
 		},
 	}
+	// GroupModelRatesColumns holds the columns for the "group_model_rates" table.
+	GroupModelRatesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt64, Increment: true},
+		{Name: "model", Type: field.TypeString, Size: 100},
+		{Name: "rate_multiplier", Type: field.TypeFloat64, Default: 1, SchemaType: map[string]string{"postgres": "decimal(10,4)"}},
+		{Name: "card_price", Type: field.TypeFloat64, Nullable: true, SchemaType: map[string]string{"postgres": "decimal(20,8)"}},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "group_id", Type: field.TypeInt64},
+	}
+	// GroupModelRatesTable holds the schema information for the "group_model_rates" table.
+	GroupModelRatesTable = &schema.Table{
+		Name:       "group_model_rates",
+		Columns:    GroupModelRatesColumns,
+		PrimaryKey: []*schema.Column{GroupModelRatesColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "group_model_rates_groups_model_rates",
+				Columns:    []*schema.Column{GroupModelRatesColumns[6]},
+				RefColumns: []*schema.Column{GroupsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "groupmodelrate_group_id_model",
+				Unique:  true,
+				Columns: []*schema.Column{GroupModelRatesColumns[6], GroupModelRatesColumns[1]},
+			},
+			{
+				Name:    "groupmodelrate_group_id",
+				Unique:  false,
+				Columns: []*schema.Column{GroupModelRatesColumns[6]},
+			},
+			{
+				Name:    "groupmodelrate_model",
+				Unique:  false,
+				Columns: []*schema.Column{GroupModelRatesColumns[1]},
+			},
+		},
+	}
 	// PromoCodesColumns holds the columns for the "promo_codes" table.
 	PromoCodesColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt64, Increment: true},
@@ -796,6 +837,7 @@ var (
 		AccountsTable,
 		AccountGroupsTable,
 		GroupsTable,
+		GroupModelRatesTable,
 		PromoCodesTable,
 		PromoCodeUsagesTable,
 		ProxiesTable,
@@ -827,6 +869,10 @@ func init() {
 	}
 	GroupsTable.Annotation = &entsql.Annotation{
 		Table: "groups",
+	}
+	GroupModelRatesTable.ForeignKeys[0].RefTable = GroupsTable
+	GroupModelRatesTable.Annotation = &entsql.Annotation{
+		Table: "group_model_rates",
 	}
 	PromoCodesTable.Annotation = &entsql.Annotation{
 		Table: "promo_codes",
