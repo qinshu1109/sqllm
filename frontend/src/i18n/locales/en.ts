@@ -516,7 +516,8 @@ export default {
     exportExcelSuccess: 'Usage data exported successfully (Excel format)',
     exportExcelFailed: 'Failed to export usage data',
     imageUnit: ' images',
-    userAgent: 'User-Agent'
+    userAgent: 'User-Agent',
+    allModels: 'All Models'
   },
 
   // Redeem
