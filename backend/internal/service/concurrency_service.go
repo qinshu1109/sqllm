@@ -58,12 +58,20 @@ const (
 
 // ConcurrencyService manages concurrent request limiting for accounts and users
 type ConcurrencyService struct {
-	cache ConcurrencyCache
+	cache         ConcurrencyCache
+	disableLimits bool
 }
 
 // NewConcurrencyService creates a new ConcurrencyService
 func NewConcurrencyService(cache ConcurrencyCache) *ConcurrencyService {
 	return &ConcurrencyService{cache: cache}
+}
+
+func (s *ConcurrencyService) SetDisableLimits(disable bool) {
+	if s == nil {
+		return
+	}
+	s.disableLimits = disable
 }
 
 // AcquireResult represents the result of acquiring a concurrency slot
@@ -88,11 +96,17 @@ type AccountLoadInfo struct {
 // If the account is at max concurrency, it waits until a slot is available or timeout.
 // Returns a release function that MUST be called when the request completes.
 func (s *ConcurrencyService) AcquireAccountSlot(ctx context.Context, accountID int64, maxConcurrency int) (*AcquireResult, error) {
+	if s == nil || s.disableLimits || s.cache == nil {
+		return &AcquireResult{
+			Acquired:    true,
+			ReleaseFunc: func() {},
+		}, nil
+	}
 	// If maxConcurrency is 0 or negative, no limit
 	if maxConcurrency <= 0 {
 		return &AcquireResult{
 			Acquired:    true,
-			ReleaseFunc: func() {}, // no-op
+			ReleaseFunc: func() {},
 		}, nil
 	}
 
@@ -127,11 +141,17 @@ func (s *ConcurrencyService) AcquireAccountSlot(ctx context.Context, accountID i
 // If the user is at max concurrency, it waits until a slot is available or timeout.
 // Returns a release function that MUST be called when the request completes.
 func (s *ConcurrencyService) AcquireUserSlot(ctx context.Context, userID int64, maxConcurrency int) (*AcquireResult, error) {
+	if s == nil || s.disableLimits || s.cache == nil {
+		return &AcquireResult{
+			Acquired:    true,
+			ReleaseFunc: func() {},
+		}, nil
+	}
 	// If maxConcurrency is 0 or negative, no limit
 	if maxConcurrency <= 0 {
 		return &AcquireResult{
 			Acquired:    true,
-			ReleaseFunc: func() {}, // no-op
+			ReleaseFunc: func() {},
 		}, nil
 	}
 
@@ -170,8 +190,7 @@ func (s *ConcurrencyService) AcquireUserSlot(ctx context.Context, userID int64, 
 // Returns true if successful, false if the wait queue is full.
 // maxWait should be user.Concurrency + defaultExtraWaitSlots
 func (s *ConcurrencyService) IncrementWaitCount(ctx context.Context, userID int64, maxWait int) (bool, error) {
-	if s.cache == nil {
-		// Redis not available, allow request
+	if s == nil || s.disableLimits || s.cache == nil {
 		return true, nil
 	}
 
@@ -187,7 +206,7 @@ func (s *ConcurrencyService) IncrementWaitCount(ctx context.Context, userID int6
 // DecrementWaitCount decrements the wait queue counter for a user.
 // Should be called when a request completes or exits the wait queue.
 func (s *ConcurrencyService) DecrementWaitCount(ctx context.Context, userID int64) {
-	if s.cache == nil {
+	if s == nil || s.disableLimits || s.cache == nil {
 		return
 	}
 
@@ -202,7 +221,7 @@ func (s *ConcurrencyService) DecrementWaitCount(ctx context.Context, userID int6
 
 // IncrementAccountWaitCount increments the wait queue counter for an account.
 func (s *ConcurrencyService) IncrementAccountWaitCount(ctx context.Context, accountID int64, maxWait int) (bool, error) {
-	if s.cache == nil {
+	if s == nil || s.disableLimits || s.cache == nil {
 		return true, nil
 	}
 
@@ -216,7 +235,7 @@ func (s *ConcurrencyService) IncrementAccountWaitCount(ctx context.Context, acco
 
 // DecrementAccountWaitCount decrements the wait queue counter for an account.
 func (s *ConcurrencyService) DecrementAccountWaitCount(ctx context.Context, accountID int64) {
-	if s.cache == nil {
+	if s == nil || s.disableLimits || s.cache == nil {
 		return
 	}
 
@@ -230,7 +249,7 @@ func (s *ConcurrencyService) DecrementAccountWaitCount(ctx context.Context, acco
 
 // GetAccountWaitingCount gets current wait queue count for an account.
 func (s *ConcurrencyService) GetAccountWaitingCount(ctx context.Context, accountID int64) (int, error) {
-	if s.cache == nil {
+	if s == nil || s.disableLimits || s.cache == nil {
 		return 0, nil
 	}
 	return s.cache.GetAccountWaitingCount(ctx, accountID)
@@ -247,7 +266,7 @@ func CalculateMaxWait(userConcurrency int) int {
 
 // GetAccountsLoadBatch returns load info for multiple accounts.
 func (s *ConcurrencyService) GetAccountsLoadBatch(ctx context.Context, accounts []AccountWithConcurrency) (map[int64]*AccountLoadInfo, error) {
-	if s.cache == nil {
+	if s == nil || s.disableLimits || s.cache == nil {
 		return map[int64]*AccountLoadInfo{}, nil
 	}
 	return s.cache.GetAccountsLoadBatch(ctx, accounts)
@@ -255,7 +274,7 @@ func (s *ConcurrencyService) GetAccountsLoadBatch(ctx context.Context, accounts 
 
 // CleanupExpiredAccountSlots removes expired slots for one account (background task).
 func (s *ConcurrencyService) CleanupExpiredAccountSlots(ctx context.Context, accountID int64) error {
-	if s.cache == nil {
+	if s == nil || s.disableLimits || s.cache == nil {
 		return nil
 	}
 	return s.cache.CleanupExpiredAccountSlots(ctx, accountID)
@@ -263,7 +282,7 @@ func (s *ConcurrencyService) CleanupExpiredAccountSlots(ctx context.Context, acc
 
 // StartSlotCleanupWorker starts a background cleanup worker for expired account slots.
 func (s *ConcurrencyService) StartSlotCleanupWorker(accountRepo AccountRepository, interval time.Duration) {
-	if s == nil || s.cache == nil || accountRepo == nil || interval <= 0 {
+	if s == nil || s.disableLimits || s.cache == nil || accountRepo == nil || interval <= 0 {
 		return
 	}
 
@@ -300,11 +319,16 @@ func (s *ConcurrencyService) StartSlotCleanupWorker(accountRepo AccountRepositor
 // Returns a map of accountID -> current concurrency count
 func (s *ConcurrencyService) GetAccountConcurrencyBatch(ctx context.Context, accountIDs []int64) (map[int64]int, error) {
 	result := make(map[int64]int)
+	if s == nil || s.disableLimits || s.cache == nil {
+		for _, accountID := range accountIDs {
+			result[accountID] = 0
+		}
+		return result, nil
+	}
 
 	for _, accountID := range accountIDs {
 		count, err := s.cache.GetAccountConcurrency(ctx, accountID)
 		if err != nil {
-			// If key doesn't exist in Redis, count is 0
 			count = 0
 		}
 		result[accountID] = count

@@ -259,6 +259,7 @@ concurrency:
   # SSE ping interval during concurrency wait (seconds)
   # 并发等待期间的 SSE ping 间隔（秒）
   ping_interval: 10
+  disable_limits: true
 
 # =============================================================================
 # Database Configuration (PostgreSQL)

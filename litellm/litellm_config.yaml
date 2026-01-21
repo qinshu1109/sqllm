@@ -1,0 +1,87 @@
+model_list:
+  # Claude Sonnet 4.5
+  - model_name: claude-sonnet-4-5-20250929
+    litellm_params:
+      model: anthropic/claude-sonnet-4-5-20250929
+      api_base: http://127.0.0.1:8080
+      stream: true
+      extra_headers:
+        anthropic-beta: prompt-caching-2024-07-31
+      configurable_clientside_auth_params: ["api_key"]
+
+  # Claude Opus 4.5
+  - model_name: claude-opus-4-5-20251101
+    litellm_params:
+      model: anthropic/claude-opus-4-5-20251101
+      api_base: http://127.0.0.1:8080
+      stream: true
+      extra_headers:
+        anthropic-beta: prompt-caching-2024-07-31
+      configurable_clientside_auth_params: ["api_key"]
+
+  # Claude Haiku 4.5
+  - model_name: claude-haiku-4-5-20251001
+    litellm_params:
+      model: anthropic/claude-haiku-4-5-20251001
+      api_base: http://127.0.0.1:8080
+      stream: true
+      extra_headers:
+        anthropic-beta: prompt-caching-2024-07-31
+      configurable_clientside_auth_params: ["api_key"]
+
+  # Gemini 模型
+  - model_name: gemini-3-pro-preview
+    litellm_params:
+      model: anthropic/gemini-3-pro-preview
+      api_base: http://127.0.0.1:8080
+      stream: true
+      configurable_clientside_auth_params: ["api_key"]
+
+  - model_name: gemini-3-flash
+    litellm_params:
+      model: anthropic/gemini-3-flash
+      api_base: http://127.0.0.1:8080
+      stream: true
+      configurable_clientside_auth_params: ["api_key"]
+
+  # Gemini 图像生成模型
+  - model_name: gemini-3-pro-image-preview
+    litellm_params:
+      model: anthropic/gemini-3-pro-image-preview
+      api_base: http://127.0.0.1:8080
+      stream: true
+      configurable_clientside_auth_params: ["api_key"]
+
+  - model_name: gemini-2.5-flash-preview-native-audio-dialog
+    litellm_params:
+      model: anthropic/gemini-2.5-flash-preview-native-audio-dialog
+      api_base: http://127.0.0.1:8080
+      stream: true
+      configurable_clientside_auth_params: ["api_key"]
+
+  # GPT 模型 (使用 openai/ 前缀，发送到 /v1/chat/completions)
+  - model_name: gpt-5.2
+    litellm_params:
+      model: openai/gpt-5.2
+      api_base: http://127.0.0.1:8080/v1
+      stream: true
+      configurable_clientside_auth_params: ["api_key"]
+
+  - model_name: gpt-5.2-codex
+    litellm_params:
+      model: openai/gpt-5.2-codex
+      api_base: http://127.0.0.1:8080/v1
+      stream: true
+      configurable_clientside_auth_params: ["api_key"]
+
+general_settings:
+  # 使用自定义认证捕获原始 API Key
+  custom_auth: sub2api_passthrough.user_api_key_auth
+  drop_params: true
+
+litellm_settings:
+  cache: false
+  drop_params: true
+  callbacks:
+    # 透传客户端的 API Key 到 Sub2API
+    - sub2api_passthrough.sub2api_passthrough

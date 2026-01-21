@@ -198,7 +198,8 @@ type CircuitBreakerConfig struct {
 
 type ConcurrencyConfig struct {
 	// PingInterval: 并发等待期间的 SSE ping 间隔（秒）
-	PingInterval int `mapstructure:"ping_interval"`
+	PingInterval  int  `mapstructure:"ping_interval"`
+	DisableLimits bool `mapstructure:"disable_limits"`
 }
 
 // GatewayConfig API网关相关配置
@@ -796,6 +797,7 @@ func setDefaults() {
 	viper.SetDefault("gateway.litellm.url", "http://localhost:4000")
 	viper.SetDefault("gateway.litellm.enable_claude_caching", true)
 	viper.SetDefault("concurrency.ping_interval", 10)
+	viper.SetDefault("concurrency.disable_limits", false)
 
 	// TokenRefresh
 	viper.SetDefault("token_refresh.enabled", true)

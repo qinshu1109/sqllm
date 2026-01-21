@@ -81,6 +81,7 @@ func ProvideDeferredService(accountRepo AccountRepository, timingWheel *TimingWh
 func ProvideConcurrencyService(cache ConcurrencyCache, accountRepo AccountRepository, cfg *config.Config) *ConcurrencyService {
 	svc := NewConcurrencyService(cache)
 	if cfg != nil {
+		svc.SetDisableLimits(cfg.Concurrency.DisableLimits)
 		svc.StartSlotCleanupWorker(accountRepo, cfg.Gateway.Scheduling.SlotCleanupInterval)
 	}
 	return svc
